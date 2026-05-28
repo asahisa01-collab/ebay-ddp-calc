@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eBay US DDP 利益計算機</title>
+<style>
+  :root {
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --ink: #1e293b;
+    --muted: #64748b;
+    --line: #e2e8f0;
+    --accent: #2d4a8a;
+    --green: #059669;
+    --red: #dc2626;
+    --amber-bg: #fffbeb;
+    --amber-line: #fde68a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+    line-height: 1.5;
+    padding: 16px;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; }
+  h1 {
+    font-size: 18px;
+    margin: 4px 0 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  h1 .badge {
+    font-size: 11px;
+    font-weight: 600;
+    background: #7c4a2d;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .sub { color: var(--muted); font-size: 12px; margin: 0 0 16px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 2px rgba(15,23,42,.04);
+  }
+  .card h2 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--muted);
+    margin: 0 0 12px;
+  }
+  .field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  .field:last-child { border-bottom: none; }
+  .field label { font-size: 14px; font-weight: 500; }
+  .field label .hint { display: block; font-size: 11px; color: var(--muted); font-weight: 400; }
+  .input-box {
+    display: inline-flex;
+    align-items: center;
+    background: var(--amber-bg);
+    border: 1px solid var(--amber-line);
+    border-radius: 8px;
+    padding: 0 10px;
+    height: 40px;
+    min-width: 130px;
+  }
+  .input-box .pre, .input-box .suf {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    flex: none;
+  }
+  .input-box input {
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: right;
+    width: 100%;
+    padding: 0 4px;
+    color: var(--ink);
+    outline: none;
+    -moz-appearance: textfield;
+  }
+  .input-box input::-webkit-outer-spin-button,
+  .input-box input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  .hint.linked { color: var(--accent); cursor: pointer; text-decoration: underline; }
+
+  .result {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .result .box {
+    background: #f8fafc;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+  .result .box .k { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .result .box .v { font-size: 30px; font-weight: 800; letter-spacing: -.01em; }
+  .result .box .v small { font-size: 16px; font-weight: 700; }
+  .v.pos { color: var(--green); }
+  .v.neg { color: var(--red); }
+
+  table.breakdown { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.breakdown td { padding: 8px 2px; border-bottom: 1px solid var(--line); }
+  table.breakdown tr:last-child td { border-bottom: none; }
+  table.breakdown td.lbl { color: var(--muted); }
+  table.breakdown td.num { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+  table.breakdown tr.total td { border-top: 2px solid var(--ink); padding-top: 10px; }
+  table.breakdown tr.total td.lbl { color: var(--ink); font-weight: 700; }
+
+  .foot { font-size: 11px; color: var(--muted); text-align: center; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>eBay 利益計算機 <span class="badge">US DDP</span></h1>
+  <p class="sub">アメリカ向けDDP配送の出品前利益シミュレーション。値を入れると即計算します。</p>
+
+  <div class="card">
+    <h2>入力</h2>
+    <div class="field">
+      <label>販売価格<span class="hint">eBay販売価格</span></label>
+      <div class="input-box"><span class="pre">$</span><input type="number" inputmode="decimal" id="price" step="0.01"></div>
+    </div>
+    <div class="field">
+      <label>eBay手数料率<span class="hint">販売価格＋別途送料に課税</span></label>
+      <div class="input-box"><input type="number" inputmode="decimal" id="feeRate" step="0.1"><span class="suf">%</span></div>
+    </div>
+    <div class="field">
+      <label>関税率<span class="hint">販売価格に課税</span></label>
+      <div class="input-box"><input type="number" inputmode="decimal" id="dutyRate" step="0.1"><span class="suf">%</span></div>
+    </div>
+    <div class="field">
+      <label>別途送料<span class="hint" id="shipHint">自動: 関税と同額（編集で上書き）</span></label>
+      <div class="input-box"><span class="pre">$</span><input type="number" inputmode="decimal" id="ship" step="0.01"></div>
+    </div>
+    <div class="field">
+      <label>為替レート<span class="hint">JPY / USD</span></label>
+      <div class="input-box"><input type="number" inputmode="decimal" id="fx" step="0.01"><span class="suf">円</span></div>
+    </div>
+    <div class="field">
+      <label>仕入れ価格<span class="hint">商品原価</span></label>
+      <div class="input-box"><input type="number" inputmode="decimal" id="cost" step="1"><span class="suf">円</span></div>
+    </div>
+    <div class="field">
+      <label>国際送料<span class="hint">FedEx / EMS 等</span></label>
+      <div class="input-box"><input type="number" inputmode="decimal" id="intl" step="1"><span class="suf">円</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>計算結果</h2>
+    <div class="result">
+      <div class="box">
+        <div class="k">利益</div>
+        <div class="v" id="profit">—</div>
+      </div>
+      <div class="box">
+        <div class="k">利益率</div>
+        <div class="v" id="margin">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>内訳</h2>
+    <table class="breakdown">
+      <tr><td class="lbl">売上合計（販売価格＋別途送料）</td><td class="num" id="b_gross">—</td></tr>
+      <tr><td class="lbl">eBay手数料</td><td class="num" id="b_fee">—</td></tr>
+      <tr><td class="lbl">関税</td><td class="num" id="b_duty">—</td></tr>
+      <tr class="total"><td class="lbl">USD残高</td><td class="num" id="b_net">—</td></tr>
+      <tr><td class="lbl">円換算額</td><td class="num" id="b_jpy">—</td></tr>
+      <tr><td class="lbl">− 仕入れ価格</td><td class="num" id="b_cost">—</td></tr>
+      <tr><td class="lbl">− 国際送料</td><td class="num" id="b_intl">—</td></tr>
+    </table>
+  </div>
+
+  <p class="foot">手数料率・関税率・為替は自動保存され、次回開いたときに復元されます。</p>
+</div>
+
+<script>
+(function () {
+  var SAVE_KEYS = ["feeRate", "dutyRate", "fx"];
+  var DEFAULTS = { price: 100, feeRate: 15, dutyRate: 15, fx: 155, cost: 6200, intl: 3100 };
+  var ids = ["price", "feeRate", "dutyRate", "fx", "cost", "intl"];
+  var el = {};
+  ids.forEach(function (id) { el[id] = document.getElementById(id); });
+  el.ship = document.getElementById("ship");
+  var shipHint = document.getElementById("shipHint");
+  var shipManual = false;   // 別途送料: false=関税と同額で自動追従 / true=手入力値を使用
+
+  function updateShipHint() {
+    if (shipManual) {
+      shipHint.textContent = "↺ 関税と同額に戻す";
+      shipHint.className = "hint linked";
+    } else {
+      shipHint.textContent = "自動: 関税と同額（編集で上書き）";
+      shipHint.className = "hint";
+    }
+  }
+
+  function num(id) {
+    var v = parseFloat(el[id].value);
+    return isFinite(v) ? v : 0;
+  }
+  var yen = function (n) { return "¥" + Math.round(n).toLocaleString("ja-JP"); };
+  var usd = function (n) { return "$" + n.toLocaleString("ja-JP", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+
+  function calc() {
+    var price = num("price");
+    var feeRate = num("feeRate"), dutyRate = num("dutyRate");
+    var fx = num("fx"), cost = num("cost"), intl = num("intl");
+
+    var dutyUsd = price * (dutyRate / 100);
+    // 別途送料: 自動なら関税と同額（フィールドへ書き戻し）、手入力ならその値を使用
+    var shipUsd;
+    if (shipManual) {
+      shipUsd = num("ship");
+    } else {
+      shipUsd = Math.round(dutyUsd * 100) / 100;
+      el.ship.value = shipUsd;
+    }
+    var grossUsd = price + shipUsd;
+    var feeUsd = grossUsd * (feeRate / 100);
+    var netUsd = grossUsd - feeUsd - dutyUsd;
+    var jpy = Math.round(netUsd * fx);
+    var profit = jpy - cost - intl;
+    var salesJpy = grossUsd * fx;
+    var margin = salesJpy !== 0 ? (profit / salesJpy) * 100 : null;
+
+    // 内訳
+    document.getElementById("b_gross").textContent = usd(grossUsd);
+    document.getElementById("b_fee").textContent = "−" + usd(feeUsd);
+    document.getElementById("b_duty").textContent = "−" + usd(dutyUsd);
+    document.getElementById("b_net").textContent = usd(netUsd);
+    document.getElementById("b_jpy").textContent = yen(jpy);
+    document.getElementById("b_cost").textContent = "−" + yen(cost);
+    document.getElementById("b_intl").textContent = "−" + yen(intl);
+
+    // 結果
+    var pEl = document.getElementById("profit");
+    pEl.textContent = yen(profit);
+    pEl.className = "v " + (profit >= 0 ? "pos" : "neg");
+
+    var mEl = document.getElementById("margin");
+    if (margin === null) {
+      mEl.textContent = "—";
+      mEl.className = "v";
+    } else {
+      mEl.innerHTML = margin.toFixed(1) + "<small>%</small>";
+      mEl.className = "v " + (profit >= 0 ? "pos" : "neg");
+    }
+
+    // 保存
+    try {
+      SAVE_KEYS.forEach(function (k) { localStorage.setItem("ddp_" + k, el[k].value); });
+    } catch (e) {}
+  }
+
+  // 初期値: 保存値があれば復元、なければデフォルト
+  ids.forEach(function (id) {
+    var saved = null;
+    if (SAVE_KEYS.indexOf(id) !== -1) {
+      try { saved = localStorage.getItem("ddp_" + id); } catch (e) {}
+    }
+    el[id].value = (saved !== null && saved !== "") ? saved : DEFAULTS[id];
+    el[id].addEventListener("input", calc);
+  });
+
+  // 別途送料: 手入力したら上書きモード、ヒントをクリックで自動モードに戻す
+  el.ship.addEventListener("input", function () {
+    shipManual = true;
+    updateShipHint();
+    calc();
+  });
+  shipHint.addEventListener("click", function () {
+    if (!shipManual) return;
+    shipManual = false;
+    updateShipHint();
+    calc();
+  });
+
+  updateShipHint();
+  calc();
+})();
+</script>
+</body>
+</html>
