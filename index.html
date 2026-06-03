@@ -183,6 +183,10 @@
       <div class="input-box"><input type="number" inputmode="decimal" id="feeRate" step="0.1"><span class="suf">%</span></div>
     </div>
     <div class="field">
+      <label>プロモーテッド広告率<span class="hint">落札時に売上（販売価格＋別途送料）へ課金</span></label>
+      <div class="input-box"><input type="number" inputmode="decimal" id="promoRate" step="0.1"><span class="suf">%</span></div>
+    </div>
+    <div class="field">
       <label>関税率<span class="hint">販売価格に課税</span></label>
       <div class="input-box"><input type="number" inputmode="decimal" id="dutyRate" step="0.1"><span class="suf">%</span></div>
     </div>
@@ -268,6 +272,7 @@
     <table class="breakdown">
       <tr><td class="lbl">売上合計（販売価格＋別途送料）</td><td class="num" id="b_gross">—</td></tr>
       <tr><td class="lbl">eBay手数料</td><td class="num" id="b_fee">—</td></tr>
+      <tr><td class="lbl">プロモーテッド広告料</td><td class="num" id="b_promo">—</td></tr>
       <tr><td class="lbl">関税</td><td class="num" id="b_duty">—</td></tr>
       <tr class="total"><td class="lbl">USD残高</td><td class="num" id="b_net">—</td></tr>
       <tr><td class="lbl">円換算額</td><td class="num" id="b_jpy">—</td></tr>
@@ -281,9 +286,9 @@
 
 <script>
 (function () {
-  var SAVE_KEYS = ["feeRate", "dutyRate", "fx"];
-  var DEFAULTS = { price: 100, feeRate: 15, dutyRate: 15, fx: 155, cost: 6200, intl: 3100 };
-  var ids = ["price", "feeRate", "dutyRate", "fx", "cost", "intl"];
+  var SAVE_KEYS = ["feeRate", "promoRate", "dutyRate", "fx"];
+  var DEFAULTS = { price: 100, feeRate: 15, promoRate: 0, dutyRate: 15, fx: 155, cost: 6200, intl: 3100 };
+  var ids = ["price", "feeRate", "promoRate", "dutyRate", "fx", "cost", "intl"];
   var el = {};
   ids.forEach(function (id) { el[id] = document.getElementById(id); });
   el.ship = document.getElementById("ship");
@@ -309,7 +314,7 @@
 
   function calc() {
     var price = num("price");
-    var feeRate = num("feeRate"), dutyRate = num("dutyRate");
+    var feeRate = num("feeRate"), promoRate = num("promoRate"), dutyRate = num("dutyRate");
     var fx = num("fx"), cost = num("cost"), intl = num("intl");
 
     var dutyUsd = price * (dutyRate / 100);
@@ -323,7 +328,8 @@
     }
     var grossUsd = price + shipUsd;
     var feeUsd = grossUsd * (feeRate / 100);
-    var netUsd = grossUsd - feeUsd - dutyUsd;
+    var promoUsd = grossUsd * (promoRate / 100);
+    var netUsd = grossUsd - feeUsd - promoUsd - dutyUsd;
     var jpy = Math.round(netUsd * fx);
     var profit = jpy - cost - intl;
     var salesJpy = grossUsd * fx;
@@ -332,6 +338,7 @@
     // 内訳
     document.getElementById("b_gross").textContent = usd(grossUsd);
     document.getElementById("b_fee").textContent = "−" + usd(feeUsd);
+    document.getElementById("b_promo").textContent = "−" + usd(promoUsd);
     document.getElementById("b_duty").textContent = "−" + usd(dutyUsd);
     document.getElementById("b_net").textContent = usd(netUsd);
     document.getElementById("b_jpy").textContent = yen(jpy);
