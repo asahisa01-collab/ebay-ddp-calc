@@ -404,7 +404,7 @@
   function look(tbl, w){ if(w<=0) return null; for(var i=0;i<tbl.length;i++){ if(w<=tbl[i][0]+1e-9) return {tier:tbl[i][0], jpy:tbl[i][1]}; } return null; }
   var g = function(id){ return document.getElementById(id); };
   var val = function(id){ var v=parseFloat(g(id).value); return isFinite(v)?v:0; };
-  var area='48', fx='W', svc='FICP';
+  var area='48', fx='W', svc='FICP', firstLoad=true;
 
   function render(){
     var actual=val('sc_w');
@@ -453,6 +453,18 @@
         var t=btn.textContent; btn.textContent='✓入れた'; setTimeout(function(){ btn.textContent='採用'; },1200);
       });
     });
+
+    // 初回ロード時は FICP の送料をデフォルトで国際送料に入れる
+    if(firstLoad){
+      firstLoad=false;
+      var ficpTbl = fx==='W'?T.fedexW:T.fedexE;
+      var ficpR = look(ficpTbl, chg(5000));
+      if(ficpR){
+        var ficpTotal = ficpR.jpy + Math.round(ficpR.jpy*fFx);
+        var intl=g('intl'); intl.value=ficpTotal;
+        intl.dispatchEvent(new Event('input',{bubbles:true}));
+      }
+    }
     save();
   }
   function bindSeg(id,setter){
