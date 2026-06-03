@@ -130,6 +130,41 @@
   table.breakdown tr.total td.lbl { color: var(--ink); font-weight: 700; }
 
   .foot { font-size: 11px; color: var(--muted); text-align: center; margin-top: 6px; }
+
+  /* ---- 国際送料 計算（組込） ---- */
+  .seg2 { display:flex; gap:6px; flex-wrap:wrap; }
+  .seg2 button { flex:1; min-width:92px; padding:7px 6px; font-size:12px; font-weight:600;
+    border:1px solid var(--line); background:#fff; border-radius:8px; color:#475569; cursor:pointer; }
+  .seg2 button.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .scfield { padding:8px 0; border-bottom:1px dashed var(--line); }
+  .scfield:last-of-type { border-bottom:none; }
+  .scfield > label { font-size:13px; font-weight:600; display:block; margin-bottom:6px; }
+  .scfield > label .hint { font-weight:400; color:var(--muted); font-size:11px; margin-left:6px; }
+  .dims3 { display:flex; align-items:center; gap:6px; }
+  .dims3 input { width:100%; height:36px; border:1px solid var(--amber-line); background:var(--amber-bg);
+    border-radius:8px; text-align:center; font-size:15px; font-weight:600; color:var(--ink); outline:none; -moz-appearance:textfield; }
+  .dims3 input::-webkit-outer-spin-button,.dims3 input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  .dims3 .x { color:#cbd5e1; font-weight:700; }
+  .fuel3 { display:flex; gap:6px; }
+  .fuel3 .f { flex:1; text-align:center; }
+  .fuel3 .f span { font-size:10.5px; color:var(--muted); display:block; margin-bottom:3px; }
+  .fuel3 .f a { color:var(--accent); text-decoration:none; }
+  .fuel3 input { width:100%; height:34px; border:1px solid var(--amber-line); background:var(--amber-bg);
+    border-radius:8px; text-align:center; font-weight:700; color:var(--ink); outline:none; -moz-appearance:textfield; }
+  .fuel3 input::-webkit-outer-spin-button,.fuel3 input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  .scdimout { font-size:11px; color:#475569; line-height:1.55; margin-top:8px; }
+  .scdimout b { color:var(--accent); } .scdimout .gov { color:var(--red); font-weight:700; }
+  .scrow { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 0; border-bottom:1px solid var(--line); }
+  .scrow:last-child { border-bottom:none; }
+  .scrow .m { font-size:12.5px; font-weight:600; }
+  .scrow .m small { display:block; font-weight:400; color:var(--muted); font-size:10.5px; }
+  .scrow .r { display:flex; align-items:center; gap:8px; }
+  .scrow .pr { font-weight:700; font-size:15px; font-variant-numeric:tabular-nums; }
+  .scrow.best .pr { color:var(--green); }
+  .adopt { border:1px solid var(--accent); color:var(--accent); background:#fff; border-radius:7px;
+    padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap; }
+  .adopt:active { background:var(--accent); color:#fff; }
+  .scnote { font-size:10.5px; color:var(--muted); margin-top:8px; line-height:1.5; }
 </style>
 </head>
 <body>
@@ -167,6 +202,51 @@
       <label>国際送料<span class="hint">FedEx / EMS 等</span></label>
       <div class="input-box"><input type="number" inputmode="decimal" id="intl" step="1"><span class="suf">円</span></div>
     </div>
+  </div>
+
+  <div class="card">
+    <h2>国際送料を計算（US宛・2026料金表）</h2>
+    <div class="scfield">
+      <label>実重量 <span class="hint">請求重量＝実重量と容積重量の大きい方</span></label>
+      <div class="input-box" style="min-width:120px"><input id="sc_w" type="number" inputmode="decimal" step="0.1" value="1"><span class="suf">kg</span></div>
+    </div>
+    <div class="scfield">
+      <label>箱サイズ <span class="hint">任意・3辺で容積重量を会社別に自動計算</span></label>
+      <div class="dims3">
+        <input id="sc_L" type="number" inputmode="decimal" placeholder="長"><span class="x">×</span>
+        <input id="sc_W" type="number" inputmode="decimal" placeholder="幅"><span class="x">×</span>
+        <input id="sc_H" type="number" inputmode="decimal" placeholder="高"><span style="font-size:11px;color:var(--muted)">cm</span>
+      </div>
+      <div class="scdimout" id="sc_dimout"></div>
+    </div>
+    <div class="scfield">
+      <label>届け先エリア</label>
+      <div class="seg2" id="sc_area">
+        <button data-area="48" class="on">本土48州</button>
+        <button data-area="other">アラスカ/ハワイ/領土</button>
+      </div>
+    </div>
+    <div class="scfield">
+      <label>FedEx サービス / エリア</label>
+      <div class="seg2" id="sc_svc" style="margin-bottom:6px">
+        <button data-svc="FICP" class="on">FICP</button>
+        <button data-svc="IP">Priority</button>
+      </div>
+      <div class="seg2" id="sc_fx">
+        <button data-fx="W" class="on">西部 (USW)</button>
+        <button data-fx="E">東部・カナダ</button>
+      </div>
+    </div>
+    <div class="scfield">
+      <label>燃油サーチャージ% <span class="hint">社名タップで告知ページ・OCは込み</span></label>
+      <div class="fuel3">
+        <div class="f"><span><a href="https://www.orangeconnex.jp/about" target="_blank" rel="noopener">Economy↗</a></span><input id="sc_fEco" type="number" inputmode="decimal" step="0.5" value="0"></div>
+        <div class="f"><span><a href="https://mydhl.express.dhl/jp/ja/ship/surcharges.html" target="_blank" rel="noopener">DHL↗</a></span><input id="sc_fDhl" type="number" inputmode="decimal" step="0.5" value="0"></div>
+        <div class="f"><span><a href="https://www.fedex.com/ja-jp/shipping/surcharges.html" target="_blank" rel="noopener">FedEx↗</a></span><input id="sc_fFx" type="number" inputmode="decimal" step="0.5" value="0"></div>
+      </div>
+    </div>
+    <div id="sc_out" style="margin-top:10px"></div>
+    <div class="scnote">「採用」を押すと、その送料が上の<b>国際送料</b>欄に入ります。表示は基本＋燃油＋規定外。米国関税・通関費は別（このDDP計算で別途算出）。</div>
   </div>
 
   <div class="card">
@@ -303,6 +383,97 @@
 
   updateShipHint();
   calc();
+})();
+</script>
+
+<!-- 国際送料 計算モジュール（2026料金表・US宛）。採用ボタンで #intl に流し込む -->
+<script>
+(function(){
+  var T = {
+  econ48: [[0.1,1157],[0.2,1289],[0.3,1491],[0.4,1677],[0.5,1943],[0.6,2096],[0.7,2189],[0.8,2549],[0.9,2660],[1,2848],[1.1,2958],[1.2,3065],[1.3,3174],[1.4,3493],[1.5,3599],[1.6,3711],[1.7,3816],[1.8,3928],[1.9,4768],[2,4947],[2.5,5264],[3,5973],[3.5,6562],[4,7266],[4.5,8615],[5,11065],[5.5,11789],[6,12576],[6.5,13354],[7,14344],[7.5,15144],[8,15932],[8.5,16563],[9,17119],[9.5,18019],[10,18522],[10.5,19122],[11,19677],[11.5,20338],[12,20936],[12.5,21585],[13,22131],[13.5,22685],[14,23454],[14.5,23766],[15,24509],[15.5,25139],[16,26547],[16.5,27138],[17,27817],[17.5,28478],[18,29144],[18.5,29687],[19,30372],[19.5,31062],[20,32016],[20.5,32683],[21,33410],[21.5,34089],[22,34762],[22.5,35463],[23,36325],[23.5,36860],[24,37421],[24.5,38077],[25,38625]],
+  econOther: [[0.1,1226],[0.2,1393],[0.3,1703],[0.4,2005],[0.5,2473],[0.6,2640],[0.7,2733],[0.8,3154],[0.9,3267],[1,3844],[1.1,3954],[1.2,4061],[1.3,4170],[1.4,4798],[1.5,4904],[1.6,5016],[1.7,5121],[1.8,5233],[1.9,5287],[2,5475],[2.5,5724],[3,6589],[3.5,7412],[4,8210],[4.5,9409],[5,11065],[5.5,11789],[6,12576],[6.5,13354],[7,14801],[7.5,15470],[8,16129],[8.5,16785],[9,17403],[9.5,18059],[10,18890],[10.5,19547],[11,20134],[11.5,20861],[12,21636],[12.5,22424],[13,23167],[13.5,23932],[14,24926],[14.5,25464],[15,26555]],
+  oc48: [[0.1,1288],[0.2,1435],[0.3,1660],[0.4,1867],[0.5,2163],[0.6,2333],[0.7,2437],[0.8,2838],[0.9,2961],[1,3171],[1.1,3293],[1.2,3413],[1.3,3534],[1.4,3889],[1.5,4007],[1.6,4132],[1.7,4248],[1.8,4373],[1.9,5309],[2,5507],[2.5,5861],[3,6650],[3.5,7306],[4,8089],[4.5,9592],[5,12320],[5.5,13125],[6,14002],[6.5,14868],[7,15969],[7.5,16861],[8,17738],[8.5,18440],[9,19060],[9.5,20061],[10,20621],[10.5,21290],[11,21907],[11.5,22643],[12,23309],[12.5,24031],[13,24639],[13.5,25257],[14,26112],[14.5,26460],[15,27287],[15.5,27989],[16,29556],[16.5,30214],[17,30970],[17.5,31706],[18,32447],[18.5,33052],[19,33814],[19.5,34583],[20,35644],[20.5,36388],[21,37197],[21.5,37952],[22,38702],[22.5,39482],[23,40442],[23.5,41038],[24,41662],[24.5,42393],[25,43003]],
+  ocOther: [[0.1,1365],[0.2,1551],[0.3,1896],[0.4,2232],[0.5,2753],[0.6,2939],[0.7,3043],[0.8,3512],[0.9,3636],[1,4280],[1.1,4402],[1.2,4521],[1.3,4643],[1.4,5342],[1.5,5460],[1.6,5585],[1.7,5702],[1.8,5826],[1.9,5886],[2,6095],[2.5,6374],[3,7335],[3.5,8252],[4,9140],[4.5,10476],[5,12320],[5.5,13125],[6,14002],[6.5,14868],[7,16479],[7.5,17224],[8,17957],[8.5,18687],[9,19376],[9.5,20105],[10,21030],[10.5,21763],[11,22416],[11.5,23226],[12,24088],[12.5,24966],[13,25793],[13.5,26645],[14,27752],[14.5,28350],[15,29565]],
+  dhl: [[0.5,2727],[1,3078],[1.5,3207],[2,3365],[2.5,3753],[3,4138],[3.5,4616],[4,5010],[4.5,5405],[5,5800],[5.5,6194],[6,6587],[6.5,7035],[7,7580],[7.5,8123],[8,8667],[8.5,9209],[9,9752],[9.5,10296],[10,10839],[10.5,11382],[11,11925],[11.5,12469],[12,13012],[12.5,13555],[13,14099],[13.5,14641],[14,15185],[14.5,15728],[15,16273],[15.5,16816],[16,17360],[16.5,17903],[17,18446],[17.5,18990],[18,19533],[18.5,20078],[19,20621],[19.5,21165],[20,21708],[21,22795],[22,23883],[23,24970],[24,26057],[25,27144],[26,28232],[27,29318],[28,30405],[29,31482],[30,32569],[31,33654],[32,34738],[33,35821],[34,36905],[35,37988],[36,39072],[37,40156],[38,41239],[39,42323],[40,43406],[41,44490],[42,45574],[43,46657],[44,47742],[45,48825],[46,49909],[47,50993],[48,52076],[49,53160],[50,54243],[51,55327],[52,56411],[53,57494],[54,58578],[55,59661],[56,60745],[57,61830],[58,62913],[59,63997],[60,65080],[61,66164],[62,67248],[63,68331],[64,69415],[65,70498],[66,71582],[67,72666],[68,73749],[69,74833],[70,75918]],
+  fedexW: [[0.5,2082],[1,2558],[1.5,2797],[2,3061],[2.5,3328],[3,3492],[3.5,3549],[4,3973],[4.5,4395],[5,4718],[5.5,5043],[6,5366],[6.5,5734],[7,6183],[7.5,6575],[8,6761],[8.5,6947],[9,7131],[9.5,8735],[10,8958],[10.5,9195],[11,9432],[11.5,9672],[12,9910],[12.5,11323],[13,11589],[13.5,11854],[14,12120],[14.5,12385],[15,12650],[15.5,12915],[16,14544],[16.5,14837],[17,15129],[17.5,15422],[18,15715],[18.5,16007],[19,16300],[19.5,16594],[20,16887],[21,19070],[22,20035],[23,21000],[24,21966],[25,22929],[26,23895],[27,24860],[28,25825],[29,26790],[30,27754],[31,28720],[32,29684],[33,31582],[34,32539],[35,33496],[36,34453],[37,35410],[38,36367],[39,37324],[40,38281],[41,39239],[42,40196],[43,41153],[44,42110],[45,42110],[46,42110],[47,42110],[48,42110],[49,42364],[50,43229],[51,44094],[52,44958],[53,45823],[54,46687],[55,47552],[56,48416],[57,49281],[58,50146],[59,51010],[60,51875],[61,52739],[62,53604],[63,54469],[64,55333],[65,56198],[66,57062],[67,57927],[68,58791]],
+  fedexE: [[0.5,2115],[1,2599],[1.5,2840],[2,3108],[2.5,3383],[3,3540],[3.5,3593],[4,4022],[4.5,4451],[5,4718],[5.5,5043],[6,5366],[6.5,5735],[7,6184],[7.5,6683],[8,6871],[8.5,7060],[9,7249],[9.5,8865],[10,9089],[10.5,9346],[11,9602],[11.5,9861],[12,10116],[12.5,11439],[13,11723],[13.5,12006],[14,12289],[14.5,12573],[15,12857],[15.5,13140],[16,14631],[16.5,14940],[17,15249],[17.5,15559],[18,15867],[18.5,16177],[19,16485],[19.5,16794],[20,17104],[21,20625],[22,21657],[23,22689],[24,23721],[25,24754],[26,25787],[27,26819],[28,27852],[29,28885],[30,29916],[31,30950],[32,31983],[33,34201],[34,35237],[35,36274],[36,37310],[37,38346],[38,39383],[39,40419],[40,41455],[41,42492],[42,43528],[43,44565],[44,45601],[45,45624],[46,45624],[47,45624],[48,45792],[49,46746],[50,47700],[51,48654],[52,49608],[53,50562],[54,51516],[55,52470],[56,53424],[57,54378],[58,55332],[59,56286],[60,57240],[61,58194],[62,59148],[63,60102],[64,61056],[65,62010],[66,62964],[67,63918],[68,64872]],
+  fedexW_IP: [[0.5,2331],[1,2614],[1.5,2814],[2,2829],[2.5,3151],[3,3711],[3.5,3717],[4,4204],[4.5,4692],[5,5180],[5.5,6326],[6,6480],[6.5,6635],[7,6790],[7.5,6944],[8,7099],[8.5,7254],[9,7409],[9.5,9429],[10,9622],[10.5,9795],[11,9970],[11.5,10143],[12,10317],[12.5,12225],[13,12427],[13.5,12630],[14,12833],[14.5,13036],[15,13238],[15.5,13441],[16,15730],[16.5,15964],[17,16196],[17.5,16431],[18,16665],[18.5,16897],[19,17132],[19.5,17366],[20,17599],[21,20400],[22,21371],[23,22343],[24,23314],[25,24286],[26,25258],[27,26228],[28,27200],[29,28172],[30,29143],[31,30114],[32,31085],[33,32064],[34,33036],[35,34008],[36,34979],[37,35951],[38,36923],[39,37894],[40,38866],[41,39838],[42,40809],[43,41781],[44,42753],[45,42755],[46,42755],[47,43207],[48,44126],[49,45046],[50,45965],[51,46884],[52,47804],[53,48723],[54,49642],[55,50562],[56,51481],[57,52400],[58,53319],[59,54239],[60,55158],[61,56077],[62,56997],[63,57916],[64,58835],[65,59755],[66,60674],[67,61593],[68,62512]],
+  fedexE_IP: [[0.5,2369],[1,2655],[1.5,2850],[2,2859],[2.5,3186],[3,3755],[3.5,3757],[4,4252],[4.5,4746],[5,5241],[5.5,6429],[6,6587],[6.5,6746],[7,6905],[7.5,7065],[8,7224],[8.5,7383],[9,7541],[9.5,9590],[10,9788],[10.5,9967],[11,10146],[11.5,10325],[12,10505],[12.5,12411],[13,12620],[13.5,12828],[14,13035],[14.5,13243],[15,13451],[15.5,13659],[16,15914],[16.5,16153],[17,16391],[17.5,16631],[18,16870],[18.5,17107],[19,17346],[19.5,17585],[20,17823],[21,22085],[22,23136],[23,24187],[24,25240],[25,26291],[26,27343],[27,28394],[28,29446],[29,30498],[30,31550],[31,32601],[32,33652],[33,34689],[34,35740],[35,36791],[36,37842],[37,38893],[38,39945],[39,40996],[40,42047],[41,43098],[42,44149],[43,45200],[44,46252],[45,46252],[46,46794],[47,47811],[48,48828],[49,49846],[50,50863],[51,51880],[52,52898],[53,53915],[54,54932],[55,55949],[56,56967],[57,57984],[58,59001],[59,60018],[60,61036],[61,62053],[62,63070],[63,64087],[64,65105],[65,66122],[66,67139],[67,68156],[68,69174]]
+  };
+  var OVERSIZE_FEE = 2475;
+  function look(tbl, w){ if(w<=0) return null; for(var i=0;i<tbl.length;i++){ if(w<=tbl[i][0]+1e-9) return {tier:tbl[i][0], jpy:tbl[i][1]}; } return null; }
+  var g = function(id){ return document.getElementById(id); };
+  var val = function(id){ var v=parseFloat(g(id).value); return isFinite(v)?v:0; };
+  var area='48', fx='W', svc='FICP';
+
+  function render(){
+    var actual=val('sc_w');
+    var L=val('sc_L'), W=val('sc_W'), H=val('sc_H');
+    var hasDim = L>0&&W>0&&H>0, vol = hasDim?L*W*H:0;
+    var dimout=g('sc_dimout');
+    if(hasDim){
+      var v8=vol/8000, v5=vol/5000, g8=actual>0&&v8>actual+1e-9, g5=actual>0&&v5>actual+1e-9;
+      dimout.innerHTML='容積重量 → Economy/OC <b class="'+(g8?'gov':'')+'">'+v8.toFixed(2)+'kg</b>（÷8000） ／ DHL・FedEx <b class="'+(g5?'gov':'')+'">'+v5.toFixed(2)+'kg</b>（÷5000）<br>実重量 '+(actual||0)+'kg と重い方で課金';
+    } else {
+      dimout.innerHTML = (L>0||W>0||H>0) ? '<span style="color:#94a3b8">3辺すべて入れると容積重量を計算します</span>' : '';
+    }
+    var out=g('sc_out');
+    if(actual<=0){ out.innerHTML='<div class="scnote">実重量を入力してください</div>'; return; }
+    var chg=function(d){ return hasDim?Math.max(actual,vol/d):actual; };
+    var ecoTbl=area==='48'?T.econ48:T.econOther, ocTbl=area==='48'?T.oc48:T.ocOther;
+    var fxTbl=svc==='IP'?(fx==='W'?T.fedexW_IP:T.fedexE_IP):(fx==='W'?T.fedexW:T.fedexE);
+    var econOver=hasDim&&(Math.max(L,W,H)>55.88||vol>55000);
+    var fEco=val('sc_fEco')/100, fDhl=val('sc_fDhl')/100, fFx=val('sc_fFx')/100;
+    function b(name,sub,tbl,div,fr,inc,over){
+      var r=look(tbl,chg(div)); if(!r) return {name:name,sub:sub,na:true};
+      var fuel=inc?0:Math.round(r.jpy*fr);
+      var volw=hasDim?vol/div:null;
+      return {name:name,sub:sub,total:r.jpy+fuel+(over?OVERSIZE_FEE:0),tier:r.tier,volw:volw,gov:volw!=null&&volw>actual+1e-9};
+    }
+    var rows=[
+      b('Economy',(area==='48'?'48州':'48州外'),ecoTbl,8000,fEco,false,econOver),
+      b('Orange Connex','燃油込',ocTbl,8000,0,true,econOver),
+      b('DHL便','Zone10',T.dhl,5000,fDhl,false,false),
+      b('FedEx '+svc,(fx==='W'?'西部':'東部/CA'),fxTbl,5000,fFx,false,false)
+    ];
+    var min=Infinity; rows.forEach(function(x){ if(!x.na&&x.total<min) min=x.total; });
+    out.innerHTML=rows.map(function(x){
+      if(x.na) return '<div class="scrow"><div class="m">'+x.name+'<small>'+x.sub+'</small></div><div class="r"><span class="pr" style="color:#cbd5e1">上限超</span></div></div>';
+      var best=x.total===min;
+      var winfo = x.volw!=null ? ('・容積'+(x.gov?'<b style="color:#dc2626">':'')+x.volw.toFixed(2)+'kg'+(x.gov?'</b>':'')) : '';
+      return '<div class="scrow '+(best?'best':'')+'"><div class="m">'+x.name
+        +'<small>'+x.sub+'・〜'+x.tier+'kg'+winfo+'</small></div>'
+        +'<div class="r"><span class="pr">¥'+x.total.toLocaleString()+'</span>'
+        +'<button class="adopt" data-v="'+x.total+'">採用</button></div></div>';
+    }).join('');
+    [].forEach.call(out.querySelectorAll('.adopt'), function(btn){
+      btn.addEventListener('click', function(){
+        var intl=g('intl'); intl.value=btn.dataset.v;
+        intl.dispatchEvent(new Event('input',{bubbles:true}));
+        var t=btn.textContent; btn.textContent='✓入れた'; setTimeout(function(){ btn.textContent='採用'; },1200);
+      });
+    });
+    save();
+  }
+  function bindSeg(id,setter){
+    g(id).addEventListener('click', function(e){
+      var b=e.target.closest('button'); if(!b) return; setter(b);
+      [].forEach.call(this.children, function(c){ c.classList.toggle('on', c===b); });
+      render();
+    });
+  }
+  bindSeg('sc_area', function(b){ area=b.dataset.area; });
+  bindSeg('sc_svc', function(b){ svc=b.dataset.svc; });
+  bindSeg('sc_fx', function(b){ fx=b.dataset.fx; });
+  ['sc_w','sc_L','sc_W','sc_H','sc_fEco','sc_fDhl','sc_fFx'].forEach(function(id){ g(id).addEventListener('input', render); });
+  function save(){ try{ localStorage.setItem('ddp_ship', JSON.stringify({fEco:g('sc_fEco').value,fDhl:g('sc_fDhl').value,fFx:g('sc_fFx').value,area:area,fx:fx,svc:svc})); }catch(e){} }
+  function load(){ try{ var s=JSON.parse(localStorage.getItem('ddp_ship')||'{}');
+    if(s.fEco!=null)g('sc_fEco').value=s.fEco; if(s.fDhl!=null)g('sc_fDhl').value=s.fDhl; if(s.fFx!=null)g('sc_fFx').value=s.fFx;
+    if(s.area){ area=s.area; [].forEach.call(g('sc_area').children,function(b){ b.classList.toggle('on',b.dataset.area===area); }); }
+    if(s.svc){ svc=s.svc; [].forEach.call(g('sc_svc').children,function(b){ b.classList.toggle('on',b.dataset.svc===svc); }); }
+    if(s.fx){ fx=s.fx; [].forEach.call(g('sc_fx').children,function(b){ b.classList.toggle('on',b.dataset.fx===fx); }); }
+  }catch(e){} }
+  load(); render();
 })();
 </script>
 </body>
