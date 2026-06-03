@@ -199,7 +199,7 @@
       <div class="input-box"><input type="number" inputmode="decimal" id="cost" step="1"><span class="suf">円</span></div>
     </div>
     <div class="field">
-      <label>国際送料<span class="hint">FedEx / EMS 等</span></label>
+      <label>国際送料<span class="hint" id="intlHint">自動: FICP送料</span></label>
       <div class="input-box"><input type="number" inputmode="decimal" id="intl" step="1"><span class="suf">円</span></div>
     </div>
   </div>
@@ -240,9 +240,9 @@
     <div class="scfield">
       <label>燃油サーチャージ% <span class="hint">社名タップで告知ページ・OCは込み</span></label>
       <div class="fuel3">
-        <div class="f"><span><a href="https://www.orangeconnex.jp/about" target="_blank" rel="noopener">Economy↗</a></span><input id="sc_fEco" type="number" inputmode="decimal" step="0.5" value="0"></div>
-        <div class="f"><span><a href="https://mydhl.express.dhl/jp/ja/ship/surcharges.html" target="_blank" rel="noopener">DHL↗</a></span><input id="sc_fDhl" type="number" inputmode="decimal" step="0.5" value="0"></div>
-        <div class="f"><span><a href="https://www.fedex.com/ja-jp/shipping/surcharges.html" target="_blank" rel="noopener">FedEx↗</a></span><input id="sc_fFx" type="number" inputmode="decimal" step="0.5" value="0"></div>
+        <div class="f"><span><a href="https://www.orangeconnex.jp/about" target="_blank" rel="noopener">Economy↗</a></span><input id="sc_fEco" type="number" inputmode="decimal" step="0.25" value="13.5"></div>
+        <div class="f"><span><a href="https://mydhl.express.dhl/jp/ja/ship/surcharges.html" target="_blank" rel="noopener">DHL↗</a></span><input id="sc_fDhl" type="number" inputmode="decimal" step="0.25" value="48.75"></div>
+        <div class="f"><span><a href="https://www.fedex.com/ja-jp/shipping/surcharges.html" target="_blank" rel="noopener">FedEx↗</a></span><input id="sc_fFx" type="number" inputmode="decimal" step="0.25" value="49.25"></div>
       </div>
     </div>
     <div id="sc_out" style="margin-top:10px"></div>
@@ -404,7 +404,19 @@
   function look(tbl, w){ if(w<=0) return null; for(var i=0;i<tbl.length;i++){ if(w<=tbl[i][0]+1e-9) return {tier:tbl[i][0], jpy:tbl[i][1]}; } return null; }
   var g = function(id){ return document.getElementById(id); };
   var val = function(id){ var v=parseFloat(g(id).value); return isFinite(v)?v:0; };
-  var area='48', fx='W', svc='FICP', firstLoad=true;
+  var area='48', fx='W', svc='FICP';
+  var intlAuto=true, programmatic=false;
+
+  function setIntl(v){
+    programmatic=true;
+    var intl=g('intl'); intl.value=v; intl.dispatchEvent(new Event('input',{bubbles:true}));
+    programmatic=false;
+  }
+  function updateIntlHint(){
+    var h=g('intlHint'); if(!h) return;
+    if(intlAuto){ h.textContent='自動: FICP送料（編集で上書き）'; h.className='hint'; }
+    else { h.textContent='↺ FICP送料に戻す'; h.className='hint linked'; }
+  }
 
   function render(){
     var actual=val('sc_w');
@@ -448,22 +460,17 @@
     }).join('');
     [].forEach.call(out.querySelectorAll('.adopt'), function(btn){
       btn.addEventListener('click', function(){
-        var intl=g('intl'); intl.value=btn.dataset.v;
-        intl.dispatchEvent(new Event('input',{bubbles:true}));
-        var t=btn.textContent; btn.textContent='✓入れた'; setTimeout(function(){ btn.textContent='採用'; },1200);
+        intlAuto=false; updateIntlHint();          // 手動採用 → 自動追従を解除
+        setIntl(btn.dataset.v);
+        btn.textContent='✓入れた'; setTimeout(function(){ btn.textContent='採用'; },1200);
       });
     });
 
-    // 初回ロード時は FICP の送料をデフォルトで国際送料に入れる
-    if(firstLoad){
-      firstLoad=false;
+    // 国際送料: 自動モードなら FICP 送料に追従
+    if(intlAuto){
       var ficpTbl = fx==='W'?T.fedexW:T.fedexE;
       var ficpR = look(ficpTbl, chg(5000));
-      if(ficpR){
-        var ficpTotal = ficpR.jpy + Math.round(ficpR.jpy*fFx);
-        var intl=g('intl'); intl.value=ficpTotal;
-        intl.dispatchEvent(new Event('input',{bubbles:true}));
-      }
+      if(ficpR){ setIntl(ficpR.jpy + Math.round(ficpR.jpy*fFx)); }
     }
     save();
   }
@@ -478,6 +485,10 @@
   bindSeg('sc_svc', function(b){ svc=b.dataset.svc; });
   bindSeg('sc_fx', function(b){ fx=b.dataset.fx; });
   ['sc_w','sc_L','sc_W','sc_H','sc_fEco','sc_fDhl','sc_fFx'].forEach(function(id){ g(id).addEventListener('input', render); });
+  // 国際送料を手で打ったら自動追従を解除（プログラム更新は無視）
+  g('intl').addEventListener('input', function(){ if(programmatic) return; intlAuto=false; updateIntlHint(); });
+  // ヒントをタップで FICP 自動追従に復帰
+  g('intlHint').addEventListener('click', function(){ if(intlAuto) return; intlAuto=true; updateIntlHint(); render(); });
   function save(){ try{ localStorage.setItem('ddp_ship', JSON.stringify({fEco:g('sc_fEco').value,fDhl:g('sc_fDhl').value,fFx:g('sc_fFx').value,area:area,fx:fx,svc:svc})); }catch(e){} }
   function load(){ try{ var s=JSON.parse(localStorage.getItem('ddp_ship')||'{}');
     if(s.fEco!=null)g('sc_fEco').value=s.fEco; if(s.fDhl!=null)g('sc_fDhl').value=s.fDhl; if(s.fFx!=null)g('sc_fFx').value=s.fFx;
@@ -485,7 +496,7 @@
     if(s.svc){ svc=s.svc; [].forEach.call(g('sc_svc').children,function(b){ b.classList.toggle('on',b.dataset.svc===svc); }); }
     if(s.fx){ fx=s.fx; [].forEach.call(g('sc_fx').children,function(b){ b.classList.toggle('on',b.dataset.fx===fx); }); }
   }catch(e){} }
-  load(); render();
+  load(); updateIntlHint(); render();
 })();
 </script>
 </body>
