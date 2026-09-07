@@ -179,8 +179,12 @@
       <div class="input-box"><span class="pre">$</span><input type="number" inputmode="decimal" id="price" step="0.01"></div>
     </div>
     <div class="field">
-      <label>eBay手数料率<span class="hint">販売価格＋別途送料に課税</span></label>
+      <label>eBay手数料率<span class="hint">販売価格＋別途送料に課税・固定$0.40/注文は自動加算</span></label>
       <div class="input-box"><input type="number" inputmode="decimal" id="feeRate" step="0.1"><span class="suf">%</span></div>
+    </div>
+    <div class="field">
+      <label>海外決済手数料率<span class="hint">日本セラー基本1.35%・売上総額に課税</span></label>
+      <div class="input-box"><input type="number" inputmode="decimal" id="intlFee" step="0.05"><span class="suf">%</span></div>
     </div>
     <div class="field">
       <label>プロモーテッド広告率<span class="hint">落札時に売上（販売価格＋別途送料）へ課金</span></label>
@@ -195,8 +199,12 @@
       <div class="input-box"><span class="pre">$</span><input type="number" inputmode="decimal" id="ship" step="0.01"></div>
     </div>
     <div class="field">
-      <label>為替レート<span class="hint">JPY / USD</span></label>
+      <label>為替レート<span class="hint" id="fxHint">取得中…</span></label>
       <div class="input-box"><input type="number" inputmode="decimal" id="fx" step="0.01"><span class="suf">円</span></div>
+    </div>
+    <div class="field">
+      <label>為替手数料<span class="hint">Payoneer 0.8〜2.0% / eBay円受取 3%。市場レートから差し引く</span></label>
+      <div class="input-box"><input type="number" inputmode="decimal" id="fxFee" step="0.1"><span class="suf">%</span></div>
     </div>
     <div class="field">
       <label>仕入れ価格<span class="hint">商品原価</span></label>
@@ -271,24 +279,26 @@
     <h2>内訳</h2>
     <table class="breakdown">
       <tr><td class="lbl">売上合計（販売価格＋別途送料）</td><td class="num" id="b_gross">—</td></tr>
-      <tr><td class="lbl">eBay手数料</td><td class="num" id="b_fee">—</td></tr>
+      <tr><td class="lbl">eBay手数料（率＋固定<span id="b_fixed">$0.40</span>）</td><td class="num" id="b_fee">—</td></tr>
+      <tr><td class="lbl">海外決済手数料</td><td class="num" id="b_intlfee">—</td></tr>
       <tr><td class="lbl">プロモーテッド広告料</td><td class="num" id="b_promo">—</td></tr>
       <tr><td class="lbl">関税</td><td class="num" id="b_duty">—</td></tr>
       <tr class="total"><td class="lbl">USD残高</td><td class="num" id="b_net">—</td></tr>
+      <tr><td class="lbl">適用為替<span class="hint" id="b_fxinfo"></span></td><td class="num" id="b_fx">—</td></tr>
       <tr><td class="lbl">円換算額</td><td class="num" id="b_jpy">—</td></tr>
       <tr><td class="lbl">− 仕入れ価格</td><td class="num" id="b_cost">—</td></tr>
       <tr><td class="lbl">− 国際送料</td><td class="num" id="b_intl">—</td></tr>
     </table>
   </div>
 
-  <p class="foot">手数料率・関税率・為替は自動保存され、次回開いたときに復元されます。</p>
+  <p class="foot">手数料率・関税率・為替手数料は自動保存され、次回開いたときに復元されます。為替は開くたびに市場レートを取得（オフライン時は前回値）。</p>
 </div>
 
 <script>
 (function () {
-  var SAVE_KEYS = ["feeRate", "promoRate", "dutyRate", "fx"];
-  var DEFAULTS = { price: 100, feeRate: 15, promoRate: 0, dutyRate: 15, fx: 155, cost: 6200, intl: 3100 };
-  var ids = ["price", "feeRate", "promoRate", "dutyRate", "fx", "cost", "intl"];
+  var SAVE_KEYS = ["feeRate", "intlFee", "promoRate", "dutyRate", "fx", "fxFee"];
+  var DEFAULTS = { price: 100, feeRate: 13.6, intlFee: 1.35, promoRate: 0, dutyRate: 15, fx: 155, fxFee: 2.0, cost: 6200, intl: 3100 };
+  var ids = ["price", "feeRate", "intlFee", "promoRate", "dutyRate", "fx", "fxFee", "cost", "intl"];
   var el = {};
   ids.forEach(function (id) { el[id] = document.getElementById(id); });
   el.ship = document.getElementById("ship");
@@ -310,11 +320,60 @@
     return isFinite(v) ? v : 0;
   }
   var yen = function (n) { return "¥" + Math.round(n).toLocaleString("ja-JP"); };
+  // ---- 為替: 市場レートを自動取得し、為替手数料%を引いた値を fx 欄に入れる ----
+  var fxHint = document.getElementById("fxHint");
+  var fxAuto = true;          // false = 手入力値を使用
+  var fxMarket = null, fxDate = "";
+  try {
+    fxAuto = localStorage.getItem("ddp_fxAuto") !== "0";
+    var m = parseFloat(localStorage.getItem("ddp_fxMarket"));
+    if (isFinite(m) && m > 0) { fxMarket = m; fxDate = localStorage.getItem("ddp_fxDate") || ""; }
+  } catch (e) {}
+  function applyAutoFx() {
+    if (!fxAuto || !fxMarket) return;
+    var fee = num("fxFee") / 100;
+    el.fx.value = (Math.round(fxMarket * (1 - fee) * 100) / 100).toFixed(2);
+  }
+  function updateFxHint(msg) {
+    if (!fxAuto) {
+      fxHint.textContent = "↺ 自動（市場レート − 為替手数料）に戻す";
+      fxHint.className = "hint linked";
+    } else if (fxMarket) {
+      fxHint.textContent = "自動: 市場 " + fxMarket.toFixed(2) + "円 − 手数料 " + num("fxFee") + "%" + (fxDate ? "（" + fxDate + "）" : "") + (msg ? " " + msg : "");
+      fxHint.className = "hint";
+    } else {
+      fxHint.textContent = msg || "取得中…";
+      fxHint.className = "hint";
+    }
+  }
+  function fetchFx() {
+    var done = function (rate, date) {
+      fxMarket = rate; fxDate = date;
+      try { localStorage.setItem("ddp_fxMarket", String(rate)); localStorage.setItem("ddp_fxDate", date); } catch (e) {}
+      applyAutoFx(); updateFxHint(); calc();
+    };
+    var fail = function () { updateFxHint(fxMarket ? "※取得失敗・前回値" : "取得失敗（手入力してください）"); };
+    var fmt = function (d) { return (d.getMonth() + 1) + "/" + d.getDate() + " " + d.getHours() + ":" + ("0" + d.getMinutes()).slice(-2); };
+    fetch("https://open.er-api.com/v6/latest/USD", { cache: "no-store" })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j && j.rates && j.rates.JPY) { done(j.rates.JPY, fmt(new Date())); }
+        else { throw new Error("no JPY"); }
+      })
+      .catch(function () {
+        fetch("https://api.frankfurter.dev/v1/latest?base=USD&symbols=JPY", { cache: "no-store" })
+          .then(function (r) { return r.json(); })
+          .then(function (j) {
+            if (j && j.rates && j.rates.JPY) { done(j.rates.JPY, fmt(new Date())); } else { fail(); }
+          })
+          .catch(fail);
+      });
+  }
   var usd = function (n) { return "$" + n.toLocaleString("ja-JP", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
 
   function calc() {
     var price = num("price");
-    var feeRate = num("feeRate"), promoRate = num("promoRate"), dutyRate = num("dutyRate");
+    var feeRate = num("feeRate"), intlFeeRate = num("intlFee"), promoRate = num("promoRate"), dutyRate = num("dutyRate");
     var fx = num("fx"), cost = num("cost"), intl = num("intl");
 
     var dutyUsd = price * (dutyRate / 100);
@@ -327,9 +386,12 @@
       el.ship.value = shipUsd;
     }
     var grossUsd = price + shipUsd;
-    var feeUsd = grossUsd * (feeRate / 100);
+    // 注文ごとの固定手数料: $10以下は$0.30、$10超は$0.40
+    var fixedUsd = grossUsd <= 0 ? 0 : (grossUsd <= 10 ? 0.30 : 0.40);
+    var feeUsd = grossUsd * (feeRate / 100) + fixedUsd;
+    var intlFeeUsd = grossUsd * (intlFeeRate / 100);
     var promoUsd = grossUsd * (promoRate / 100);
-    var netUsd = grossUsd - feeUsd - promoUsd - dutyUsd;
+    var netUsd = grossUsd - feeUsd - intlFeeUsd - promoUsd - dutyUsd;
     var jpy = Math.round(netUsd * fx);
     var profit = jpy - cost - intl;
     var salesJpy = grossUsd * fx;
@@ -337,7 +399,11 @@
 
     // 内訳
     document.getElementById("b_gross").textContent = usd(grossUsd);
+    document.getElementById("b_fixed").textContent = usd(fixedUsd);
     document.getElementById("b_fee").textContent = "−" + usd(feeUsd);
+    document.getElementById("b_intlfee").textContent = "−" + usd(intlFeeUsd);
+    document.getElementById("b_fx").textContent = fx.toFixed(2) + "円";
+    document.getElementById("b_fxinfo").textContent = (fxAuto && fxMarket) ? "市場 " + fxMarket.toFixed(2) + " × (1 − " + num("fxFee") + "%)" : "手入力";
     document.getElementById("b_promo").textContent = "−" + usd(promoUsd);
     document.getElementById("b_duty").textContent = "−" + usd(dutyUsd);
     document.getElementById("b_net").textContent = usd(netUsd);
@@ -362,6 +428,7 @@
     // 保存
     try {
       SAVE_KEYS.forEach(function (k) { localStorage.setItem("ddp_" + k, el[k].value); });
+      localStorage.setItem("ddp_fxAuto", fxAuto ? "1" : "0");
     } catch (e) {}
   }
 
@@ -374,6 +441,19 @@
     el[id].value = (saved !== null && saved !== "") ? saved : DEFAULTS[id];
     el[id].addEventListener("input", calc);
   });
+  // 旧版の既定15%（海外決済手数料込みのつもり）→ 分離したので13.6%へ一度だけ移行
+  try {
+    if (el.feeRate.value === "15" && localStorage.getItem("ddp_intlFee") === null) { el.feeRate.value = DEFAULTS.feeRate; }
+  } catch (e) {}
+  // 為替: 手入力で自動解除、為替手数料変更で再計算、ヒントクリックで自動復帰
+  el.fx.addEventListener("input", function () { fxAuto = false; updateFxHint(); });
+  el.fxFee.addEventListener("input", function () { applyAutoFx(); updateFxHint(); calc(); });
+  fxHint.addEventListener("click", function () {
+    if (fxAuto) return;
+    fxAuto = true; applyAutoFx(); updateFxHint(); calc();
+  });
+  applyAutoFx(); updateFxHint();
+  fetchFx();
 
   // 別途送料: 手入力したら上書きモード、ヒントをクリックで自動モードに戻す
   el.ship.addEventListener("input", function () {
