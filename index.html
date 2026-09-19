@@ -192,21 +192,26 @@
       <div class="input-box"><span class="pre">$</span><input type="number" inputmode="decimal" id="price" step="0.01"></div>
     </div>
     <div class="field">
-      <label>eBay手数料率<span class="hint">販売価格＋別途送料に課税・固定$0.40/注文は自動加算</span></label>
+      <label>eBay手数料率<span class="hint">売上税込みの総額に課税（$2,500超の部分は2.35%）・固定$0.44/注文は自動加算</span></label>
       <div class="input-box"><input type="number" inputmode="decimal" id="feeRate" step="0.1"><span class="suf">%</span></div>
       <div class="feechips" id="feeChips">
-        <button type="button" data-v="11">11% sakura 機材</button>
-        <button type="button" data-v="7">7% ギター・小物</button>
-        <button type="button" data-v="13.4">13.4% japan-2u</button>
+        <button type="button" data-v="10.29">10.29% 鍵盤・オーディオ</button>
+        <button type="button" data-v="7.37">7.37% ギター・エフェクター・小物</button>
+        <button type="button" data-v="11.38">11.38% ドラム・打楽器</button>
+        <button type="button" data-v="12.4">12.4% japan-2u（推定）</button>
       </div>
     </div>
     <div class="field">
-      <label>海外決済手数料率<span class="hint">日本セラー基本1.35%・売上総額に課税</span></label>
+      <label>海外決済手数料率<span class="hint">売上税込みの総額に課税。実績 8〜9月1.05%（4月1.48%→7月1.31%→低下）</span></label>
       <div class="input-box"><input type="number" inputmode="decimal" id="intlFee" step="0.05"><span class="suf">%</span></div>
     </div>
     <div class="field">
-      <label>プロモーテッド広告率<span class="hint">落札時に売上（販売価格＋別途送料）へ課金</span></label>
+      <label>プロモーテッド広告率<span class="hint">売上税込みの総額に課金。実績は4.4%（広告なしの出品は0に）</span></label>
       <div class="input-box"><input type="number" inputmode="decimal" id="promoRate" step="0.1"><span class="suf">%</span></div>
+    </div>
+    <div class="field">
+      <label>米国の売上税率<span class="hint">バイヤーが払う税。売上にはならないが、上の3つの手数料はこれを含む総額に掛かる。実績の中央値7.8%（州により0〜10%）</span></label>
+      <div class="input-box"><input type="number" inputmode="decimal" id="salesTax" step="0.1"><span class="suf">%</span></div>
     </div>
     <div class="field">
       <label>関税率<span class="hint">販売価格に課税</span></label>
@@ -323,7 +328,8 @@
     <h2>内訳</h2>
     <table class="breakdown">
       <tr><td class="lbl">売上合計（販売価格＋別途送料）</td><td class="num" id="b_gross">—</td></tr>
-      <tr><td class="lbl">eBay手数料（率＋固定<span id="b_fixed">$0.40</span>）</td><td class="num" id="b_fee">—</td></tr>
+      <tr><td class="lbl">手数料の対象額（売上＋売上税 <span id="b_tax"></span>）</td><td class="num" id="b_base">—</td></tr>
+      <tr><td class="lbl">eBay手数料（率＋固定<span id="b_fixed">$0.44</span>）</td><td class="num" id="b_fee">—</td></tr>
       <tr><td class="lbl">海外決済手数料</td><td class="num" id="b_intlfee">—</td></tr>
       <tr><td class="lbl">プロモーテッド広告料</td><td class="num" id="b_promo">—</td></tr>
       <tr><td class="lbl">関税</td><td class="num" id="b_duty">—</td></tr>
@@ -343,9 +349,9 @@
 
 <script>
 (function () {
-  var SAVE_KEYS = ["feeRate", "intlFee", "promoRate", "dutyRate", "fx", "fxFee"];
-  var DEFAULTS = { price: 100, feeRate: 11, intlFee: 1.35, promoRate: 0, dutyRate: 15, fx: 155, fxFee: 2.0, cost: 6200, intl: 3100 };
-  var ids = ["price", "feeRate", "intlFee", "promoRate", "dutyRate", "fx", "fxFee", "cost", "intl"];
+  var SAVE_KEYS = ["feeRate", "intlFee", "promoRate", "salesTax", "dutyRate", "fx", "fxFee"];
+  var DEFAULTS = { price: 100, feeRate: 10.29, intlFee: 1.05, promoRate: 4.4, salesTax: 7.8, dutyRate: 15, fx: 155, fxFee: 2.0, cost: 6200, intl: 3100 };
+  var ids = ["price", "feeRate", "intlFee", "promoRate", "salesTax", "dutyRate", "fx", "fxFee", "cost", "intl"];
   var el = {};
   ids.forEach(function (id) { el[id] = document.getElementById(id); });
   el.ship = document.getElementById("ship");
@@ -438,7 +444,7 @@
 
   function calc() {
     var price = num("price");
-    var feeRate = num("feeRate"), intlFeeRate = num("intlFee"), promoRate = num("promoRate"), dutyRate = num("dutyRate");
+    var feeRate = num("feeRate"), intlFeeRate = num("intlFee"), promoRate = num("promoRate"), dutyRate = num("dutyRate"), salesTaxRate = num("salesTax");
     var fx = num("fx"), cost = num("cost"), intl = num("intl");
 
     var dutyUsd = price * (dutyRate / 100);
@@ -451,11 +457,15 @@
       el.ship.value = shipUsd;
     }
     var grossUsd = price + shipUsd;
-    // 注文ごとの固定手数料: $10以下は$0.30、$10超は$0.40
-    var fixedUsd = grossUsd <= 0 ? 0 : (grossUsd <= 10 ? 0.30 : 0.40);
-    var feeUsd = grossUsd * (feeRate / 100) + fixedUsd;
-    var intlFeeUsd = grossUsd * (intlFeeRate / 100);
-    var promoUsd = grossUsd * (promoRate / 100);
+    // 手数料の課税対象＝売上＋米国売上税（バイヤー負担・eBayが納付）。eBay実績で確認: FVF/国際/広告とも税込み総額に掛かる
+    var taxUsd = grossUsd * (salesTaxRate / 100);
+    var feeBase = grossUsd + taxUsd;
+    // 注文ごとの固定手数料: 実績は$0.44（$10以下は未確認のため$0.33と推定）
+    var fixedUsd = feeBase <= 0 ? 0 : (feeBase <= 10 ? 0.33 : 0.44);
+    // FVF: $2,500までは設定率、超えた部分は2.35%（ALTEC/Muramatsu実績）
+    var feeUsd = Math.min(feeBase, 2500) * (feeRate / 100) + Math.max(0, feeBase - 2500) * 0.0235 + fixedUsd;
+    var intlFeeUsd = feeBase * (intlFeeRate / 100);
+    var promoUsd = feeBase * (promoRate / 100);
     // 米国の通関費用（各社 SpeedPAK 料金表2026「アメリカ向けDDP関連費用」）。採用した配送方法で切替
     var ib = window.__intlBd, carrier = (ib && ib.total === Math.round(intl) && ib.carrier) || "fedex";
     var cus = customsFees(carrier, price, dutyUsd, fx);
@@ -468,6 +478,8 @@
 
     // 内訳
     document.getElementById("b_gross").textContent = usd(grossUsd);
+    document.getElementById("b_tax").textContent = usd(taxUsd);
+    document.getElementById("b_base").textContent = usd(feeBase);
     document.getElementById("b_fixed").textContent = usd(fixedUsd);
     document.getElementById("b_fee").textContent = "−" + usd(feeUsd);
     document.getElementById("b_intlfee").textContent = "−" + usd(intlFeeUsd);
@@ -532,9 +544,13 @@
   // 旧版の既定15%（海外決済手数料込みのつもり）→ 分離したので13.6%へ一度だけ移行
   try {
     if (el.feeRate.value === "15" && localStorage.getItem("ddp_intlFee") === null) { el.feeRate.value = DEFAULTS.feeRate; }
-    // 旧既定13.6% → CPaSS実績(sakurasoundlab 機材≈11%)に合わせた11%へ一度だけ移行
-    if (el.feeRate.value === "13.6" && localStorage.getItem("ddp_feeV") === null) { el.feeRate.value = DEFAULTS.feeRate; }
-    localStorage.setItem("ddp_feeV", "2");
+    // 旧既定値 → eBay実績（利益計算シート US32件）に基づく既定値へ一度だけ移行
+    if (localStorage.getItem("ddp_feeV") !== "3") {
+      if (["13.6", "11", "15"].indexOf(el.feeRate.value) !== -1) el.feeRate.value = DEFAULTS.feeRate;
+      if (el.intlFee.value === "1.35") el.intlFee.value = DEFAULTS.intlFee;
+      if (el.promoRate.value === "0") el.promoRate.value = DEFAULTS.promoRate;
+      localStorage.setItem("ddp_feeV", "3");
+    }
   } catch (e) {}
   // 為替: 手入力で自動解除、為替手数料変更で再計算、ヒントクリックで自動復帰
   el.fx.addEventListener("input", function () { fxAuto = false; updateFxHint(); });
