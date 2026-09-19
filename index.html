@@ -226,6 +226,7 @@
 
   <div class="card">
     <h2>国際送料を計算（US宛・2026料金表）</h2>
+    <div class="scdimout" id="sc_ratesInfo" style="margin:-4px 0 10px"></div>
     <div class="scfield">
       <label>発送日 <span class="hint">燃料割増・混雑時割増をこの日の率で自動計算</span></label>
       <div class="input-box" style="min-width:160px"><input id="sc_date" type="date"></div>
@@ -262,27 +263,33 @@
       </div>
     </div>
     <div class="scfield">
-      <label>燃油サーチャージ% <span class="hint">社名タップで告知ページ・OCは込み</span></label>
+      <label>燃料割増% <span class="hint">発送日の公表率を自動入力・手で直すと手入力に</span></label>
       <div class="fuel3">
-        <div class="f"><span><a href="https://www.orangeconnex.jp/about" target="_blank" rel="noopener">Economy↗</a></span><input id="sc_fEco" type="number" inputmode="decimal" step="0.25" value="13.5"></div>
-        <div class="f"><span><a href="https://mydhl.express.dhl/jp/ja/ship/surcharges.html" target="_blank" rel="noopener">DHL↗</a></span><input id="sc_fDhl" type="number" inputmode="decimal" step="0.25" value="48.75"></div>
-        <div class="f"><span><a href="https://www.fedex.com/ja-jp/shipping/surcharges.html" target="_blank" rel="noopener">FedEx↗</a></span><input id="sc_fFx" type="number" inputmode="decimal" step="0.25" value="46"></div>
+        <div class="f"><span><a href="https://www.orangeconnex.jp/news" target="_blank" rel="noopener">Economy↗</a></span><input id="sc_fEco" type="number" inputmode="decimal" step="0.25"></div>
+        <div class="f"><span><a href="https://mydhl.express.dhl/jp/ja/ship/surcharges.html" target="_blank" rel="noopener">DHL↗</a></span><input id="sc_fDhl" type="number" inputmode="decimal" step="0.25"></div>
+        <div class="f"><span><a href="https://www.fedex.com/ja-jp/shipping/surcharges.html" target="_blank" rel="noopener">FedEx↗</a></span><input id="sc_fFx" type="number" inputmode="decimal" step="0.25"></div>
       </div>
       <div class="scdimout" id="sc_fuelInfo"></div>
     </div>
     <div class="scfield">
-      <label>FedEx 混雑時割増 <span class="hint">請求重量1kgあたり・発送日で自動</span></label>
-      <div class="input-box" style="min-width:140px"><input id="sc_peakKg" type="number" inputmode="numeric" step="1"><span class="suf">円/kg</span></div>
+      <label>混雑時割増（円/kg） <span class="hint">請求重量1kgあたり・発送日で自動</span></label>
+      <div class="fuel3">
+        <div class="f"><span><a href="https://mydhl.express.dhl/jp/ja/ship/surcharges/demand-surcharge.html" target="_blank" rel="noopener">DHL↗</a></span><input id="sc_pDhl" type="number" inputmode="numeric" step="1"></div>
+        <div class="f"><span><a href="https://www.fedex.com/ja-jp/shipping/surcharges/demand-surcharge.html" target="_blank" rel="noopener">FedEx↗</a></span><input id="sc_pFx" type="number" inputmode="numeric" step="1"></div>
+      </div>
       <div class="scdimout" id="sc_peakInfo"></div>
     </div>
     <div class="scfield">
       <div style="display:flex;align-items:flex-start;gap:8px;font-size:13px;font-weight:600">
         <input id="sc_pack" type="checkbox" style="width:18px;height:18px;margin:1px 0 0;flex:none">
-        <label for="sc_pack" style="display:block;margin:0;cursor:pointer">梱包が特殊<span style="display:block;font-size:11px;font-weight:400;color:var(--muted)">段ボール以外の箱・円筒形・はみ出し・ラップ巻き・ベルト付き等（FedEx特別取扱-梱包 ¥3,390）</span></label>
+        <label for="sc_pack" style="display:block;margin:0;cursor:pointer">梱包が特殊<span style="display:block;font-size:11px;font-weight:400;color:var(--muted)">段ボール以外の箱・円筒形・はみ出し・ラップ巻き・車輪/ベルト付き等（FedEx ¥3,390／DHL ¥3,300）</span></label>
       </div>
     </div>
     <div id="sc_out" style="margin-top:10px"></div>
-    <div class="scnote">「採用」を押すと、その送料が上の<b>国際送料</b>欄に入ります。FedExは SpeedPAK FedEx便 料金表(2026)とFedEx公表の割増に準拠：燃料割増＝(運送料金＋各割増)×率／混雑時割増＝請求重量×円/kg（最低¥37）／特別取扱(¥3,390・該当1つだけ)＝寸法[最長辺121cm超・2番目76cm超・長さ＋周囲266cm超、請求重量は最低18kg]・重量[実重量25kg超]・梱包／オーバーサイズ(¥8,800)＝最長辺243cm超 or 長さ＋周囲330cm超／規格外貨物混雑時割増(2026/9/21〜 ¥770)＝特別取扱かオーバーサイズに当たる荷物。Priorityのみ個人宅配達¥420・米国輸入手続き¥312（FICPは無料）。米国関税・通関手数料は上のDDP計算で算出。</div>
+    <div class="scnote">「採用」を押すと、その送料が上の<b>国際送料</b>欄に入り、DDPの通関費用もその配送方法の規定に切り替わります。<br>
+      <b>FedEx</b>（SpeedPAK FedEx便料金表2026＋FedEx公表割増）：燃料＝(運送料金＋各割増)×率／混雑時＝請求重量×円/kg（最低¥37）／特別取扱¥3,390（1つだけ）＝寸法[最長辺121cm超・2番目76cm超・長さ＋周囲266cm超、請求は最低18kg]・重量[実重量25kg超]・梱包／オーバーサイズ¥8,800＝最長辺243cm超か長さ＋周囲330cm超／規格外混雑¥770（2026/9/21〜）＝特別取扱かオーバーサイズ該当時／Priorityのみ個人宅¥420・米国輸入手続き¥312。<br>
+      <b>DHL</b>（SpeedPAK DHL便料金表2026＋DHL公表割増）：燃料＝(運送料金＋各割増)×率／繁忙期＝請求重量×円/kg／規定外(寸法)¥3,300＝1辺100cm超／特別貨物取扱¥3,300＝実重量25kg超か特殊梱包（規定外に当たる時は無し）。<br>
+      <b>Economy</b>：燃油は運送料金のみに掛かる／規定外サイズ¥2,475。<b>Orange Connex</b>：燃油込。</div>
   </div>
 
   <div class="card">
@@ -307,8 +314,8 @@
       <tr><td class="lbl">海外決済手数料</td><td class="num" id="b_intlfee">—</td></tr>
       <tr><td class="lbl">プロモーテッド広告料</td><td class="num" id="b_promo">—</td></tr>
       <tr><td class="lbl">関税</td><td class="num" id="b_duty">—</td></tr>
-      <tr><td class="lbl">通関手数料（MPF）<span id="b_mpfinfo" style="display:block;font-size:11px"></span></td><td class="num" id="b_mpf">—</td></tr>
-      <tr><td class="lbl">関税処理手数料<span style="display:block;font-size:11px">（関税＋通関手数料）×2.1%</span></td><td class="num" id="b_dpf">—</td></tr>
+      <tr><td class="lbl">米国の通関費用<span id="b_cusinfo" style="display:block;font-size:11px"></span></td><td class="num" id="b_cus">—</td></tr>
+      <tbody id="b_cusbd"></tbody>
       <tr class="total"><td class="lbl">USD残高</td><td class="num" id="b_net">—</td></tr>
       <tr><td class="lbl">適用為替<span class="hint" id="b_fxinfo"></span></td><td class="num" id="b_fx">—</td></tr>
       <tr><td class="lbl">円換算額</td><td class="num" id="b_jpy">—</td></tr>
@@ -398,6 +405,28 @@
   }
   var usd = function (n) { return "$" + n.toLocaleString("ja-JP", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
 
+  // 米国DDPの通関費用 → [[名前, USD], ...]
+  var CARRIER_NAME = { fedex: "FedEx", fedexIP: "FedEx", dhl: "DHL", eco: "Economy", oc: "Orange Connex" };
+  function customsFees(carrier, price, dutyUsd, fx) {
+    var formal = price > 2500, list = [];
+    var yen2usd = function (y) { return fx > 0 ? y / fx : 0; };
+    var mpfFormal = Math.min(651.50, Math.max(33.58, price * 0.003464));   // 商業貨物税関使用料(正式通関)
+    if (price <= 0) return list;
+    if (carrier === "dhl") {
+      if (dutyUsd > 0) list.push(["現地税金元払い請求手数料（関税の2%・最低¥850）", Math.max(yen2usd(850), dutyUsd * 0.02)]);
+      if (formal) { list.push(["通関処理料（正式通関・DDP ¥1,500）", yen2usd(1500)]); list.push(["貨物処理料 MPF（申告額×0.3464%）", mpfFormal]); }
+      else list.push(["規制手数料（簡易通関 $1.34）", 1.34]);
+    } else if (carrier === "eco" || carrier === "oc") {
+      list.push(["米国輸入通関手数料（¥245）", yen2usd(245)]);
+    } else {   // FedEx（FICP/IP）
+      list.push([formal ? "商業貨物税関使用料 MPF（申告額×0.3464%）" : "商業貨物税関使用料 MPF（簡易通関 $2.69）", formal ? mpfFormal : 2.69]);
+    }
+    // 米国関税処理手数料 2.1%（Economy/OCは関税のみが対象、FedEx/DHLは関税＋通関費用が対象）
+    var base = dutyUsd + ((carrier === "eco" || carrier === "oc") ? 0 : list.reduce(function (a, x) { return a + x[1]; }, 0));
+    if (dutyUsd > 0) list.push(["米国関税処理手数料（" + ((carrier === "eco" || carrier === "oc") ? "関税" : "関税＋通関費用") + "×2.1%）", base * 0.021]);
+    return list;
+  }
+
   function calc() {
     var price = num("price");
     var feeRate = num("feeRate"), intlFeeRate = num("intlFee"), promoRate = num("promoRate"), dutyRate = num("dutyRate");
@@ -418,11 +447,11 @@
     var feeUsd = grossUsd * (feeRate / 100) + fixedUsd;
     var intlFeeUsd = grossUsd * (intlFeeRate / 100);
     var promoUsd = grossUsd * (promoRate / 100);
-    // 米国の通関費用（SpeedPAK FedEx便 料金表2026「アメリカ向けDDP関連費用」）
-    // MPF: 簡易通関(申告$2,500以下)は$2.69/件、正式通関は申告額×0.3464%（最低$33.58・最高$651.50）
-    var mpfUsd = price <= 0 ? 0 : (price <= 2500 ? 2.69 : Math.min(651.50, Math.max(33.58, price * 0.003464)));
-    var dpfUsd = (dutyUsd + mpfUsd) * 0.021;   // 米国関税処理手数料 2.1%
-    var netUsd = grossUsd - feeUsd - intlFeeUsd - promoUsd - dutyUsd - mpfUsd - dpfUsd;
+    // 米国の通関費用（各社 SpeedPAK 料金表2026「アメリカ向けDDP関連費用」）。採用した配送方法で切替
+    var ib = window.__intlBd, carrier = (ib && ib.total === Math.round(intl) && ib.carrier) || "fedex";
+    var cus = customsFees(carrier, price, dutyUsd, fx);
+    var cusUsd = cus.reduce(function (a, x) { return a + x[1]; }, 0);
+    var netUsd = grossUsd - feeUsd - intlFeeUsd - promoUsd - dutyUsd - cusUsd;
     var jpy = Math.round(netUsd * fx);
     var profit = jpy - cost - intl;
     var salesJpy = grossUsd * fx;
@@ -437,9 +466,11 @@
     document.getElementById("b_fxinfo").textContent = (fxAuto && fxMarket) ? "市場 " + fxMarket.toFixed(2) + " × (1 − " + num("fxFee") + "%)" : "手入力";
     document.getElementById("b_promo").textContent = "−" + usd(promoUsd);
     document.getElementById("b_duty").textContent = "−" + usd(dutyUsd);
-    document.getElementById("b_mpf").textContent = "−" + usd(mpfUsd);
-    document.getElementById("b_mpfinfo").textContent = price > 2500 ? "正式通関：申告額×0.3464%" : "簡易通関（$2,500以下）：$2.69/件";
-    document.getElementById("b_dpf").textContent = "−" + usd(dpfUsd);
+    document.getElementById("b_cus").textContent = "−" + usd(cusUsd);
+    document.getElementById("b_cusinfo").textContent = CARRIER_NAME[carrier] + "・" + (price > 2500 ? "正式通関（$2,500超）" : "簡易通関（$2,500以下）") + (ib && ib.total === Math.round(intl) ? "" : "（国際送料が手入力のためFedEx想定）");
+    document.getElementById("b_cusbd").innerHTML = cus.map(function (x) {
+      return '<tr class="sub"><td class="lbl">' + x[0] + '</td><td class="num">' + usd(x[1]) + '</td></tr>';
+    }).join("");
     document.getElementById("b_net").textContent = usd(netUsd);
     document.getElementById("b_jpy").textContent = yen(jpy);
     document.getElementById("b_cost").textContent = "−" + yen(cost);
@@ -527,19 +558,26 @@
   fedexW_IP: [[0.5,2331],[1,2614],[1.5,2814],[2,2829],[2.5,3151],[3,3711],[3.5,3717],[4,4204],[4.5,4692],[5,5180],[5.5,6326],[6,6480],[6.5,6635],[7,6790],[7.5,6944],[8,7099],[8.5,7254],[9,7409],[9.5,9429],[10,9622],[10.5,9795],[11,9970],[11.5,10143],[12,10317],[12.5,12225],[13,12427],[13.5,12630],[14,12833],[14.5,13036],[15,13238],[15.5,13441],[16,15730],[16.5,15964],[17,16196],[17.5,16431],[18,16665],[18.5,16897],[19,17132],[19.5,17366],[20,17599],[21,20400],[22,21371],[23,22343],[24,23314],[25,24286],[26,25258],[27,26228],[28,27200],[29,28172],[30,29143],[31,30114],[32,31085],[33,32064],[34,33036],[35,34008],[36,34979],[37,35951],[38,36923],[39,37894],[40,38866],[41,39838],[42,40809],[43,41781],[44,42753],[45,42755],[46,42755],[47,43207],[48,44126],[49,45046],[50,45965],[51,46884],[52,47804],[53,48723],[54,49642],[55,50562],[56,51481],[57,52400],[58,53319],[59,54239],[60,55158],[61,56077],[62,56997],[63,57916],[64,58835],[65,59755],[66,60674],[67,61593],[68,62512]],
   fedexE_IP: [[0.5,2369],[1,2655],[1.5,2850],[2,2859],[2.5,3186],[3,3755],[3.5,3757],[4,4252],[4.5,4746],[5,5241],[5.5,6429],[6,6587],[6.5,6746],[7,6905],[7.5,7065],[8,7224],[8.5,7383],[9,7541],[9.5,9590],[10,9788],[10.5,9967],[11,10146],[11.5,10325],[12,10505],[12.5,12411],[13,12620],[13.5,12828],[14,13035],[14.5,13243],[15,13451],[15.5,13659],[16,15914],[16.5,16153],[17,16391],[17.5,16631],[18,16870],[18.5,17107],[19,17346],[19.5,17585],[20,17823],[21,22085],[22,23136],[23,24187],[24,25240],[25,26291],[26,27343],[27,28394],[28,29446],[29,30498],[30,31550],[31,32601],[32,33652],[33,34689],[34,35740],[35,36791],[36,37842],[37,38893],[38,39945],[39,40996],[40,42047],[41,43098],[42,44149],[43,45200],[44,46252],[45,46252],[46,46794],[47,47811],[48,48828],[49,49846],[50,50863],[51,51880],[52,52898],[53,53915],[54,54932],[55,55949],[56,56967],[57,57984],[58,59001],[59,60018],[60,61036],[61,62053],[62,63070],[63,64087],[64,65105],[65,66122],[66,67139],[67,68156],[68,69174]]
   };
-  var OVERSIZE_FEE = 2475;
-  // ---- FedEx 時期で変わる割増（公表値。更新時はここに行を足す）----
-  // 燃料割増 週次（月曜開始）: fedex.com/ja-jp/shipping/surcharges.html
-  var FX_FUEL = [['2026-06-29',38.5],['2026-07-06',38.25],['2026-07-13',38.5],['2026-07-20',39.75],['2026-07-27',44],['2026-08-03',45.5],['2026-08-10',46],['2026-08-17',43.5],['2026-08-24',46.5],['2026-08-31',47.75],['2026-09-07',46],['2026-09-14',49],['2026-09-21',51.75]];
-  // 混雑時割増 日本発→米国 プライオリティ(FICP/IP含む) 円/kg: fedex.com/ja-jp/shipping/surcharges/demand-surcharge.html
-  var FX_PEAK = [['2026-06-18',65],['2026-09-21',242]];
-  // 規格外貨物混雑時割増金 円/パッケージ（特別取扱・オーバーサイズ該当時）
-  var FX_NSS = [['2026-09-21',770]];
+  var OVERSIZE_FEE = 2475;   // Economy/OC 規定外サイズ
+  // ---- 時期で変わる割増（rates.json を VPS が毎日公式サイトから更新。取れない時はこの内蔵値）----
+  var R = {
+    fedex: { fuel: [['2026-06-29',38.5],['2026-07-06',38.25],['2026-07-13',38.5],['2026-07-20',39.75],['2026-07-27',44],['2026-08-03',45.5],['2026-08-10',46],['2026-08-17',43.5],['2026-08-24',46.5],['2026-08-31',47.75],['2026-09-07',46],['2026-09-14',49],['2026-09-21',51.75]],
+             peak: [['2026-06-18',65],['2026-09-21',242]], nss: [['2026-09-21',770]] },
+    dhl:   { fuel: [['2026-08-31',43.25],['2026-09-07',43.5],['2026-09-14',43.75],['2026-09-21',45],['2026-09-28',46.25]],
+             peak: [['2025-10-01',207],['2026-02-17',0],['2026-10-01',270],['2027-02-06',0]] },
+    eco:   { fuel: [['2026-08-16',14]] },
+    updated: '2026-09-19 13:00 (内蔵)', errors: {}
+  };
+  // 固定の割増（各社料金表2026）
   var FX_AHS = 3390, FX_OVERSIZE = 8800, FX_RESI_IP = 420, FX_INBOUND_IP = 312, FX_PEAK_MIN = 37;
-  function pick(tbl, d){ var r=null; for(var i=0;i<tbl.length;i++){ if(tbl[i][0]<=d) r=tbl[i]; } return r; }
+  var DHL_AHS = 3300, DHL_OVERDIM = 3300, DHL_OVERWT = 17000;
+  function pick(tbl, d){ var r=null; (tbl||[]).forEach(function(x){ if(x[0]<=d) r=x; }); return r; }
+  function nextOf(tbl, d){ var r=null; (tbl||[]).forEach(function(x){ if(!r && x[0]>d) r=x; }); return r; }
   function addDays(d, n){ var x=new Date(d+'T12:00:00Z'); x.setUTCDate(x.getUTCDate()+n); return x.toISOString().slice(0,10); }
   function today(){ var x=new Date(); x.setMinutes(x.getMinutes()-x.getTimezoneOffset()); return x.toISOString().slice(0,10); }
-  var fuelAuto=true, peakAuto=true;
+  function md(d){ return (+d.slice(5,7))+'/'+(+d.slice(8,10)); }
+  // 自動/手入力の状態（true=発送日の公表値を自動で入れる）
+  var AUTO = { fEco:true, fDhl:true, fFx:true, pDhl:true, pFx:true };
   function look(tbl, w){ if(w<=0) return null; for(var i=0;i<tbl.length;i++){ if(w<=tbl[i][0]+1e-9) return {tier:tbl[i][0], jpy:tbl[i][1]}; } return null; }
   var g = function(id){ return document.getElementById(id); };
   var val = function(id){ var v=parseFloat(g(id).value); return isFinite(v)?v:0; };
@@ -556,8 +594,39 @@
     if(intlAuto){ h.textContent='自動: FICP送料（編集で上書き）'; h.className='hint'; }
     else { h.textContent='↺ FICP送料に戻す'; h.className='hint linked'; }
   }
+  function yenStr(n){ return '¥'+Math.round(n).toLocaleString(); }
+
+  // 率の自動入力と説明行
+  function autoFill(id, tbl, d, weekly, unit){
+    var r=pick(tbl,d);
+    if(AUTO[id]) g('sc_'+id).value = r ? r[1] : 0;
+    var reset=' <a href="#" data-reset="'+id+'" style="color:var(--accent)">↺ 自動に戻す</a>';
+    if(!AUTO[id]) return '手入力'+reset;
+    if(!r) return '<b style="color:#dc2626">この日付の公表値なし</b>';
+    var txt = (weekly ? md(r[0])+'〜'+md(addDays(r[0],6))+'週 ' : md(r[0])+'〜 ')+r[1]+unit;
+    var last=tbl[tbl.length-1];
+    if(weekly && d>addDays(last[0],6)) txt+=' <b style="color:#dc2626">※この週はまだ未発表（直近の率で仮計算）</b>';
+    var n=nextOf(tbl,d); if(n && !weekly) txt+=' <b style="color:#b45309">→ '+md(n[0])+'から'+n[1]+unit+'</b>';
+    return txt;
+  }
 
   function render(){
+    var d=g('sc_date').value||today();
+    // データ状態
+    var errs=Object.keys(R.errors||{}), up=(R.updated||'').slice(0,10);
+    var old = up && up < addDays(today(),-8);
+    g('sc_ratesInfo').innerHTML='料金データ: '+(R.updated||'—')+' 更新（公式サイトから毎日自動取得）'
+      +(errs.length?' <b style="color:#dc2626">※取得できなかった項目: '+errs.map(function(k){ return {fedex_fuel:'FedEx燃料',fedex_peak:'FedEx混雑時',dhl_fuel:'DHL燃料',dhl_peak:'DHL繁忙期',eco_fuel:'Economy燃油'}[k]||k; }).join('・')+'（前回の値で計算中）</b>':'')
+      +(old?' <b style="color:#dc2626">※8日以上更新なし。各社↗で率を確認</b>':'');
+    var fi=[], pi=[];
+    fi.push('Economy: '+autoFill('fEco',R.eco.fuel,d,false,'%'));
+    fi.push('DHL: '+autoFill('fDhl',R.dhl.fuel,d,true,'%'));
+    fi.push('FedEx: '+autoFill('fFx',R.fedex.fuel,d,true,'%'));
+    pi.push('DHL: '+autoFill('pDhl',R.dhl.peak,d,false,'円/kg'));
+    pi.push('FedEx: '+autoFill('pFx',R.fedex.peak,d,false,'円/kg'));
+    g('sc_fuelInfo').innerHTML=fi.join('<br>');
+    g('sc_peakInfo').innerHTML=pi.join('<br>');
+
     var actual=val('sc_w');
     var L=val('sc_L'), W=val('sc_W'), H=val('sc_H');
     var hasDim = L>0&&W>0&&H>0, vol = hasDim?L*W*H:0;
@@ -570,98 +639,93 @@
     }
     var out=g('sc_out');
     if(actual<=0){ out.innerHTML='<div class="scnote">実重量を入力してください</div>'; return; }
-    var chg=function(d){ return hasDim?Math.max(actual,vol/d):actual; };
+    var chg=function(dv){ return hasDim?Math.max(actual,vol/dv):actual; };
     var ecoTbl=area==='48'?T.econ48:T.econOther, ocTbl=area==='48'?T.oc48:T.ocOther;
     var fxTbl=svc==='IP'?(fx==='W'?T.fedexW_IP:T.fedexE_IP):(fx==='W'?T.fedexW:T.fedexE);
     var econOver=hasDim&&(Math.max(L,W,H)>55.88||vol>55000);
-    var fEco=val('sc_fEco')/100, fDhl=val('sc_fDhl')/100, fFx;
-    // ---- FedEx: 発送日で燃料%・混雑時割増を自動 ----
-    var d=g('sc_date').value||today();
-    var fr=pick(FX_FUEL,d), fuelInfo=g('sc_fuelInfo');
-    if(fuelAuto && fr){ g('sc_fFx').value=fr[1]; }
-    if(!fuelAuto){ fuelInfo.innerHTML='FedEx: 手入力 <a href="#" id="sc_fuelReset" style="color:var(--accent)">↺ 発送日の公表率に戻す</a>'; }
-    else if(!fr){ fuelInfo.innerHTML='FedEx: この日付の率が未登録。FedEx↗で確認して入力'; }
-    else {
-      var last=FX_FUEL[FX_FUEL.length-1], stale=d>addDays(last[0],6);
-      fuelInfo.innerHTML='FedEx: '+fr[0].slice(5).replace('-','/')+'〜'+addDays(fr[0],6).slice(5).replace('-','/')+'週の公表率 '+fr[1]+'%'
-        +(stale?' <b style="color:#dc2626">※これより先の週は未登録。FedEx↗で最新を確認</b>':'');
-    }
-    var pr=pick(FX_PEAK,d), peakInfo=g('sc_peakInfo');
-    if(peakAuto){ g('sc_peakKg').value = pr?pr[1]:0; }
-    var nxt=null; FX_PEAK.forEach(function(x){ if(!nxt && x[0]>d) nxt=x; });
-    peakInfo.innerHTML = !peakAuto ? '手入力 <a href="#" id="sc_peakReset" style="color:var(--accent)">↺ 発送日の公表額に戻す</a>'
-      : (pr?pr[0].slice(5).replace('-','/')+'〜の公表額 '+pr[1]+'円/kg':'この日付は未登録')
-        +(nxt?' <b style="color:#b45309">／'+nxt[0].slice(5).replace('-','/')+'から'+nxt[1]+'円/kg</b>':'');
-    var nss=pick(FX_NSS,d); nss=nss?nss[1]:0;
-    var peakKg=val('sc_peakKg');
-    fFx=val('sc_fFx')/100;
+    var fEco=val('sc_fEco')/100, fDhl=val('sc_fDhl')/100, fFx=val('sc_fFx')/100;
+    var pDhl=val('sc_pDhl'), pFx=val('sc_pFx');
+    var nss=pick(R.fedex.nss,d); nss=nss?nss[1]:0;
+    var pack=g('sc_pack').checked;
 
     var sides=[L,W,H].sort(function(a,b){return b-a;});
     var girth=hasDim?sides[0]+2*(sides[1]+sides[2]):0;
-    var oversize = hasDim && (sides[0]>243 || girth>330);
-    var ahsDim = hasDim && !oversize && (sides[0]>121 || sides[1]>76 || girth>266);
-    var ahsWhy = ahsDim ? (sides[0]>121?'寸法: 最長辺'+sides[0]+'cm＞121cm':sides[1]>76?'寸法: 2番目の辺'+sides[1]+'cm＞76cm':'寸法: 長さ＋周囲 '+Math.round(girth)+'cm＞266cm')
-      : actual>25 ? '重量: 実重量'+actual+'kg＞25kg'
-      : g('sc_pack').checked ? '梱包' : '';
+    function sumOf(a){ return a.reduce(function(s,x){return s+x[1];},0); }
+    function fuelLine(base,fr){ return ['燃料割増（'+base.toLocaleString()+'×'+String(+(fr*100).toFixed(2))+'%）',Math.round(base*fr),'fuel']; }
+    function mk(name,sub,carrier,div,r,adds,fr,fuelOnBaseOnly,after,minNote){
+      var sub1=r.jpy+sumOf(adds);
+      var base=fuelOnBaseOnly?r.jpy:sub1;
+      var bd=[['運送料金（〜'+r.tier+'kg'+(minNote||'')+'）',r.jpy,'']].concat(adds);
+      var fuel=0; if(fr!=null){ var fl=fuelLine(base,fr); fuel=fl[1]; bd.push(fl); }
+      var total=sub1+fuel+sumOf(after||[]); bd=bd.concat(after||[]);
+      var volw=hasDim?vol/div:null;
+      return {name:name,sub:sub,carrier:carrier,total:total,tier:r.tier,volw:volw,gov:volw!=null&&volw>actual+1e-9,bd:bd};
+    }
+
+    // ---- FedEx ----
+    var fxOversize = hasDim && (sides[0]>243 || girth>330);
+    var fxAhsDim = hasDim && !fxOversize && (sides[0]>121 || sides[1]>76 || girth>266);
+    var fxAhsWhy = fxAhsDim ? (sides[0]>121?'寸法: 最長辺'+sides[0]+'cm＞121cm':sides[1]>76?'寸法: 2番目の辺'+sides[1]+'cm＞76cm':'寸法: 長さ＋周囲'+Math.round(girth)+'cm＞266cm')
+      : actual>25 ? '重量: 実重量'+actual+'kg＞25kg' : pack ? '梱包' : '';
     function fedexRow(name,sub,tbl,isIP){
-      var w=chg(5000); if(ahsDim||oversize) w=Math.max(w,18);   // 寸法/オーバーサイズは最低請求18kg
+      var w0=chg(5000), w=(fxAhsDim||fxOversize)?Math.max(w0,18):w0;   // 寸法/オーバーサイズは最低請求18kg
       var r=look(tbl,w); if(!r) return {name:name,sub:sub,na:true};
       var adds=[];
-      if(peakKg>0) adds.push(['混雑時割増（'+r.tier+'kg×'+peakKg+'円）',Math.max(FX_PEAK_MIN,Math.round(peakKg*r.tier)),'add']);
-      if(oversize) adds.push(['オーバーサイズ料金',FX_OVERSIZE,'add']);
-      else if(ahsWhy) adds.push(['特別取扱料金（'+ahsWhy+'）',FX_AHS,'add']);
-      if((oversize||ahsWhy)&&nss) adds.push(['規格外貨物混雑時割増',nss,'add']);
+      if(pFx>0) adds.push(['混雑時割増（'+r.tier+'kg×'+pFx+'円）',Math.max(FX_PEAK_MIN,Math.round(pFx*r.tier)),'add']);
+      if(fxOversize) adds.push(['オーバーサイズ料金',FX_OVERSIZE,'add']);
+      else if(fxAhsWhy) adds.push(['特別取扱料金（'+fxAhsWhy+'）',FX_AHS,'add']);
+      if((fxOversize||fxAhsWhy)&&nss) adds.push(['規格外貨物混雑時割増',nss,'add']);
       if(isIP) adds.push(['個人宅向け配達料',FX_RESI_IP,'add']);
-      var sub1=r.jpy+adds.reduce(function(a,x){return a+x[1];},0);
-      var fuel=Math.round(sub1*fFx);
-      var bd=[['運送料金（〜'+r.tier+'kg'+((ahsDim||oversize)&&chg(5000)<18?'・最低18kg':'')+'）',r.jpy,'']].concat(adds);
-      bd.push(['燃料割増（'+sub1.toLocaleString()+'×'+String(+(fFx*100).toFixed(2))+'%）',fuel,'fuel']);
-      var total=sub1+fuel;
-      if(isIP){ bd.push(['米国輸入手続き手数料',FX_INBOUND_IP,'add']); total+=FX_INBOUND_IP; }
-      var volw=hasDim?vol/5000:null;
-      return {name:name,sub:sub,total:total,tier:r.tier,volw:volw,gov:volw!=null&&volw>actual+1e-9,bd:bd};
+      var after=isIP?[['米国輸入手続き手数料',FX_INBOUND_IP,'add']]:[];
+      return mk(name,sub,isIP?'fedexIP':'fedex',5000,r,adds,fFx,false,after,(fxAhsDim||fxOversize)&&w0<18?'・最低18kg':'');
     }
-    function b(name,sub,tbl,div,fr,inc,adds){
-      var r=look(tbl,chg(div)); if(!r) return {name:name,sub:sub,na:true};
-      var addSum=adds.reduce(function(a,x){return a+x[1];},0);
-      var fuel=inc?0:Math.round((r.jpy+addSum)*fr);
-      var volw=hasDim?vol/div:null;
-      var bd=[['運送料金（〜'+r.tier+'kg）',r.jpy,'']].concat(adds.map(function(x){return [x[0],x[1],'add'];}));
-      if(!inc) bd.push(['燃料割増（'+(r.jpy+addSum).toLocaleString()+'×'+String(+(fr*100).toFixed(2))+'%）',fuel,'fuel']);
-      return {name:name,sub:sub,total:r.jpy+addSum+fuel,tier:r.tier,volw:volw,gov:volw!=null&&volw>actual+1e-9,bd:bd};
+    // ---- DHL ----
+    function dhlRow(){
+      var w=chg(5000), r=look(T.dhl,w);
+      if(!r || w>70) return {name:'DHL便',sub:'Zone10',na:true};
+      var adds=[];
+      if(pDhl>0) adds.push(['繁忙期追加金（'+r.tier+'kg×'+pDhl+'円）',Math.round(pDhl*r.tier),'add']);
+      var over=false;
+      if(hasDim && sides[0]>100){ adds.push(['規定外貨物手数料（寸法: 最長辺'+sides[0]+'cm＞100cm）',DHL_OVERDIM,'add']); over=true; }
+      if(!over && (actual>25 || pack)) adds.push(['特別貨物取扱料（'+(actual>25?'実重量'+actual+'kg＞25kg':'梱包')+'）',DHL_AHS,'add']);
+      return mk('DHL便','Zone10','dhl',5000,r,adds,fDhl,false);
     }
-    var ecoAdds=econOver?[['規定外サイズ料金',OVERSIZE_FEE]]:[];
-    var rows=[
-      b('Economy',(area==='48'?'48州':'48州外'),ecoTbl,8000,fEco,false,ecoAdds),
-      b('Orange Connex','燃油込',ocTbl,8000,0,true,ecoAdds),
-      b('DHL便','Zone10',T.dhl,5000,fDhl,false,[]),
-      fedexRow('FedEx '+svc,(fx==='W'?'西部':'東部/CA'),fxTbl,svc==='IP')
-    ];
+    function ecoRow(){
+      var r=look(ecoTbl,chg(8000)); if(!r) return {name:'Economy',sub:(area==='48'?'48州':'48州外'),na:true};
+      var adds=econOver?[['規定外サイズ料金',OVERSIZE_FEE,'add']]:[];
+      return mk('Economy',(area==='48'?'48州':'48州外'),'eco',8000,r,adds,fEco,true);   // 燃油は運送料金のみ
+    }
+    function ocRow(){
+      var r=look(ocTbl,chg(8000)); if(!r) return {name:'Orange Connex',sub:'燃油込',na:true};
+      var adds=econOver?[['規定外サイズ料金',OVERSIZE_FEE,'add']]:[];
+      return mk('Orange Connex','燃油込','oc',8000,r,adds,null,false);
+    }
+    var rows=[ ecoRow(), ocRow(), dhlRow(), fedexRow('FedEx '+svc,(fx==='W'?'西部':'東部/CA'),fxTbl,svc==='IP') ];
     var min=Infinity; rows.forEach(function(x){ if(!x.na&&x.total<min) min=x.total; });
-    out.innerHTML=rows.map(function(x){
+    out.innerHTML=rows.map(function(x,i){
       if(x.na) return '<div class="scrow"><div class="m">'+x.name+'<small>'+x.sub+'</small></div><div class="r"><span class="pr" style="color:#cbd5e1">上限超</span></div></div>';
       var best=x.total===min;
       var winfo = x.volw!=null ? ('・容積'+(x.gov?'<b style="color:#dc2626">':'')+x.volw.toFixed(2)+'kg'+(x.gov?'</b>':'')) : '';
       return '<div class="scrow '+(best?'best':'')+'"><div class="m">'+x.name
         +'<small>'+x.sub+'・〜'+x.tier+'kg'+winfo+'</small></div>'
-        +'<div class="r"><span class="pr">¥'+x.total.toLocaleString()+'</span>'
-        +'<button class="adopt" data-v="'+x.total+'" data-i="'+rows.indexOf(x)+'">採用</button></div>'
-        +'<div class="scbd">'+x.bd.map(function(d){ return '<div class="'+d[2]+'"><span>'+d[0]+'</span><span>¥'+d[1].toLocaleString()+'</span></div>'; }).join('')+'</div></div>';
+        +'<div class="r"><span class="pr">'+yenStr(x.total)+'</span>'
+        +'<button class="adopt" data-i="'+i+'">採用</button></div>'
+        +'<div class="scbd">'+x.bd.map(function(b){ return '<div class="'+b[2]+'"><span>'+b[0]+'</span><span>'+yenStr(b[1])+'</span></div>'; }).join('')+'</div></div>';
     }).join('');
     [].forEach.call(out.querySelectorAll('.adopt'), function(btn){
       btn.addEventListener('click', function(){
         intlAuto=false; updateIntlHint();          // 手動採用 → 自動追従を解除
-        var x=rows[+btn.dataset.i]; window.__intlBd={name:x.name+' '+x.sub,total:x.total,bd:x.bd};
-        setIntl(btn.dataset.v);
+        var x=rows[+btn.dataset.i];
+        window.__intlBd={name:x.name+' '+x.sub,carrier:x.carrier,total:x.total,bd:x.bd};
+        setIntl(x.total);
         btn.textContent='✓入れた'; setTimeout(function(){ btn.textContent='採用'; },1200);
       });
     });
 
     // 国際送料: 自動モードなら FICP 送料に追従
     if(intlAuto){
-      var ficpTbl = fx==='W'?T.fedexW:T.fedexE;
-      var ficpB = fedexRow('FICP','',ficpTbl,false);
-      if(!ficpB.na){ window.__intlBd={name:'FedEx FICP '+(fx==='W'?'西部':'東部/CA'),total:ficpB.total,bd:ficpB.bd}; setIntl(ficpB.total); }
+      var ficpB = fedexRow('FedEx FICP',(fx==='W'?'西部':'東部/CA'),fx==='W'?T.fedexW:T.fedexE,false);
+      if(!ficpB.na){ window.__intlBd={name:ficpB.name+' '+ficpB.sub,carrier:'fedex',total:ficpB.total,bd:ficpB.bd}; setIntl(ficpB.total); }
     }
     save();
   }
@@ -675,27 +739,39 @@
   bindSeg('sc_area', function(b){ area=b.dataset.area; });
   bindSeg('sc_svc', function(b){ svc=b.dataset.svc; });
   bindSeg('sc_fx', function(b){ fx=b.dataset.fx; });
-  ['sc_w','sc_L','sc_W','sc_H','sc_fEco','sc_fDhl','sc_date'].forEach(function(id){ g(id).addEventListener('input', render); });
+  ['sc_w','sc_L','sc_W','sc_H','sc_date'].forEach(function(id){ g(id).addEventListener('input', render); });
   g('sc_pack').addEventListener('change', render);
-  g('sc_fFx').addEventListener('input', function(){ fuelAuto=false; render(); });
-  g('sc_peakKg').addEventListener('input', function(){ peakAuto=false; render(); });
+  Object.keys(AUTO).forEach(function(id){ g('sc_'+id).addEventListener('input', function(){ AUTO[id]=false; render(); }); });
   g('sc_out').parentNode.addEventListener('click', function(e){
-    if(e.target.id==='sc_fuelReset'){ e.preventDefault(); fuelAuto=true; render(); }
-    if(e.target.id==='sc_peakReset'){ e.preventDefault(); peakAuto=true; render(); }
+    var id=e.target.getAttribute&&e.target.getAttribute('data-reset'); if(!id) return;
+    e.preventDefault(); AUTO[id]=true; render();
   });
   g('sc_date').value=today();
   // 国際送料を手で打ったら自動追従を解除（プログラム更新は無視）
   g('intl').addEventListener('input', function(){ if(programmatic) return; intlAuto=false; updateIntlHint(); });
   // ヒントをタップで FICP 自動追従に復帰
   g('intlHint').addEventListener('click', function(){ if(intlAuto) return; intlAuto=true; updateIntlHint(); render(); });
-  function save(){ try{ localStorage.setItem('ddp_ship', JSON.stringify({fEco:g('sc_fEco').value,fDhl:g('sc_fDhl').value,fFx:g('sc_fFx').value,fuelAuto:fuelAuto,peakKg:g('sc_peakKg').value,peakAuto:peakAuto,fuelV:3,area:area,fx:fx,svc:svc})); }catch(e){} }
+  function save(){ try{
+    var st={v:4,area:area,fx:fx,svc:svc,auto:AUTO,man:{}};
+    Object.keys(AUTO).forEach(function(id){ if(!AUTO[id]) st.man[id]=g('sc_'+id).value; });
+    localStorage.setItem('ddp_ship', JSON.stringify(st)); }catch(e){} }
   function load(){ try{ var s=JSON.parse(localStorage.getItem('ddp_ship')||'{}');
-    if(s.fEco!=null)g('sc_fEco').value=s.fEco; if(s.fDhl!=null)g('sc_fDhl').value=s.fDhl; if(s.fuelV===3){ fuelAuto=s.fuelAuto!==false; peakAuto=s.peakAuto!==false; if(!fuelAuto&&s.fFx!=null)g('sc_fFx').value=s.fFx; if(!peakAuto&&s.peakKg!=null)g('sc_peakKg').value=s.peakKg; }
+    if(s.v===4){ Object.keys(AUTO).forEach(function(id){ if(s.auto&&s.auto[id]===false&&s.man&&s.man[id]!=null){ AUTO[id]=false; g('sc_'+id).value=s.man[id]; } }); }
     if(s.area){ area=s.area; [].forEach.call(g('sc_area').children,function(b){ b.classList.toggle('on',b.dataset.area===area); }); }
     if(s.svc){ svc=s.svc; [].forEach.call(g('sc_svc').children,function(b){ b.classList.toggle('on',b.dataset.svc===svc); }); }
     if(s.fx){ fx=s.fx; [].forEach.call(g('sc_fx').children,function(b){ b.classList.toggle('on',b.dataset.fx===fx); }); }
   }catch(e){} }
-  load(); updateIntlHint(); render();
+  // 最新の rates.json を取得（同じサイト上。失敗時は内蔵値のまま）
+  function loadRates(){
+    try{ var c=JSON.parse(localStorage.getItem('ddp_rates')||'null'); if(c&&c.fedex&&c.dhl&&c.eco&&(c.updated||'')>(R.updated||'')) R=c; }catch(e){}
+    if(!window.fetch || location.protocol==='file:') return;
+    fetch('rates.json?t='+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.json():null; }).then(function(j){
+      if(!j||!j.fedex||!j.dhl||!j.eco) return;
+      R=j; try{ localStorage.setItem('ddp_rates', JSON.stringify(j)); }catch(e){}
+      render();
+    }).catch(function(){});
+  }
+  load(); loadRates(); updateIntlHint(); render();
 })();
 </script>
 </body>
