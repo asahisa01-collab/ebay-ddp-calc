@@ -172,6 +172,11 @@
   .scbd div { display:flex; justify-content:space-between; padding:1px 0 1px 8px; }
   .scbd div.add { color:#b45309; }
   .scbd div.fuel { border-top:1px dashed var(--line); margin-top:2px; padding-top:3px; }
+  .field:has(#feeChips) { flex-wrap:wrap; }
+  .feechips { display:flex; gap:6px; flex-wrap:wrap; margin-top:2px; flex-basis:100%; justify-content:flex-end; }
+  .feechips button { white-space:nowrap; }
+  .feechips button { border:1px solid var(--line); background:#fff; color:var(--muted); border-radius:14px; padding:4px 10px; font-size:11.5px; cursor:pointer; }
+  .feechips button.on { border-color:var(--accent); color:var(--accent); font-weight:700; }
   .scnote { font-size:10.5px; color:var(--muted); margin-top:8px; line-height:1.5; }
 </style>
 </head>
@@ -189,6 +194,11 @@
     <div class="field">
       <label>eBay手数料率<span class="hint">販売価格＋別途送料に課税・固定$0.40/注文は自動加算</span></label>
       <div class="input-box"><input type="number" inputmode="decimal" id="feeRate" step="0.1"><span class="suf">%</span></div>
+      <div class="feechips" id="feeChips">
+        <button type="button" data-v="11">11% sakura 機材</button>
+        <button type="button" data-v="7">7% ギター・小物</button>
+        <button type="button" data-v="13.4">13.4% japan-2u</button>
+      </div>
     </div>
     <div class="field">
       <label>海外決済手数料率<span class="hint">日本セラー基本1.35%・売上総額に課税</span></label>
@@ -334,7 +344,7 @@
 <script>
 (function () {
   var SAVE_KEYS = ["feeRate", "intlFee", "promoRate", "dutyRate", "fx", "fxFee"];
-  var DEFAULTS = { price: 100, feeRate: 13.6, intlFee: 1.35, promoRate: 0, dutyRate: 15, fx: 155, fxFee: 2.0, cost: 6200, intl: 3100 };
+  var DEFAULTS = { price: 100, feeRate: 11, intlFee: 1.35, promoRate: 0, dutyRate: 15, fx: 155, fxFee: 2.0, cost: 6200, intl: 3100 };
   var ids = ["price", "feeRate", "intlFee", "promoRate", "dutyRate", "fx", "fxFee", "cost", "intl"];
   var el = {};
   ids.forEach(function (id) { el[id] = document.getElementById(id); });
@@ -511,9 +521,20 @@
     el[id].value = (saved !== null && saved !== "") ? saved : DEFAULTS[id];
     el[id].addEventListener("input", calc);
   });
+  // 手数料率のワンタップ切替（CPaSS実績の実効率: sakura機材≈11% / ギター・小物≈7% / japan-2u≈13.4%）
+  var chips = document.getElementById("feeChips");
+  function markChip() { [].forEach.call(chips.children, function (b) { b.classList.toggle("on", parseFloat(b.dataset.v) === parseFloat(el.feeRate.value)); }); }
+  chips.addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    el.feeRate.value = b.dataset.v; calc(); markChip();
+  });
+  el.feeRate.addEventListener("input", markChip);
   // 旧版の既定15%（海外決済手数料込みのつもり）→ 分離したので13.6%へ一度だけ移行
   try {
     if (el.feeRate.value === "15" && localStorage.getItem("ddp_intlFee") === null) { el.feeRate.value = DEFAULTS.feeRate; }
+    // 旧既定13.6% → CPaSS実績(sakurasoundlab 機材≈11%)に合わせた11%へ一度だけ移行
+    if (el.feeRate.value === "13.6" && localStorage.getItem("ddp_feeV") === null) { el.feeRate.value = DEFAULTS.feeRate; }
+    localStorage.setItem("ddp_feeV", "2");
   } catch (e) {}
   // 為替: 手入力で自動解除、為替手数料変更で再計算、ヒントクリックで自動復帰
   el.fx.addEventListener("input", function () { fxAuto = false; updateFxHint(); });
@@ -540,6 +561,7 @@
 
   updateShipHint();
   calc();
+  markChip();
 })();
 </script>
 
