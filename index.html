@@ -125,7 +125,10 @@
   table.breakdown td { padding: 8px 2px; border-bottom: 1px solid var(--line); }
   table.breakdown tr:last-child td { border-bottom: none; }
   table.breakdown td.lbl { color: var(--muted); }
-  table.breakdown td.num { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+  table.breakdown td.num { white-space: nowrap; text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+  table.breakdown tr.sub td { font-size: 11.5px; padding: 4px 2px 4px 14px; border-bottom: 1px dashed var(--line); }
+  table.breakdown tr.sub td.num { font-weight: 500; color: var(--muted); padding-left: 2px; }
+  table.breakdown tr.sub.add td { color: #b45309; }
   table.breakdown tr.total td { border-top: 2px solid var(--ink); padding-top: 10px; }
   table.breakdown tr.total td.lbl { color: var(--ink); font-weight: 700; }
 
@@ -299,7 +302,8 @@
       <tr><td class="lbl">適用為替<span class="hint" id="b_fxinfo"></span></td><td class="num" id="b_fx">—</td></tr>
       <tr><td class="lbl">円換算額</td><td class="num" id="b_jpy">—</td></tr>
       <tr><td class="lbl">− 仕入れ価格</td><td class="num" id="b_cost">—</td></tr>
-      <tr><td class="lbl">− 国際送料</td><td class="num" id="b_intl">—</td></tr>
+      <tr><td class="lbl">− 国際送料<span id="b_intlsvc" style="display:block;font-size:11px"></span></td><td class="num" id="b_intl">—</td></tr>
+      <tbody id="b_intlbd"></tbody>
     </table>
   </div>
 
@@ -422,6 +426,12 @@
     document.getElementById("b_jpy").textContent = yen(jpy);
     document.getElementById("b_cost").textContent = "−" + yen(cost);
     document.getElementById("b_intl").textContent = "−" + yen(intl);
+    // 国際送料の内訳（計算カードの値と一致しているときだけ表示）
+    var ib = window.__intlBd, ibOk = ib && ib.total === Math.round(intl);
+    document.getElementById("b_intlsvc").textContent = ibOk ? ib.name : (intl ? "手入力" : "");
+    document.getElementById("b_intlbd").innerHTML = ibOk ? ib.bd.map(function (d) {
+      return '<tr class="sub ' + d[2] + '"><td class="lbl">' + d[0] + '</td><td class="num">' + yen(d[1]) + '</td></tr>';
+    }).join("") : "";
 
     // 結果
     var pEl = document.getElementById("profit");
@@ -570,12 +580,13 @@
       return '<div class="scrow '+(best?'best':'')+'"><div class="m">'+x.name
         +'<small>'+x.sub+'・〜'+x.tier+'kg'+winfo+'</small></div>'
         +'<div class="r"><span class="pr">¥'+x.total.toLocaleString()+'</span>'
-        +'<button class="adopt" data-v="'+x.total+'">採用</button></div>'
+        +'<button class="adopt" data-v="'+x.total+'" data-i="'+rows.indexOf(x)+'">採用</button></div>'
         +'<div class="scbd">'+x.bd.map(function(d){ return '<div class="'+d[2]+'"><span>'+d[0]+'</span><span>¥'+d[1].toLocaleString()+'</span></div>'; }).join('')+'</div></div>';
     }).join('');
     [].forEach.call(out.querySelectorAll('.adopt'), function(btn){
       btn.addEventListener('click', function(){
         intlAuto=false; updateIntlHint();          // 手動採用 → 自動追従を解除
+        var x=rows[+btn.dataset.i]; window.__intlBd={name:x.name+' '+x.sub,total:x.total,bd:x.bd};
         setIntl(btn.dataset.v);
         btn.textContent='✓入れた'; setTimeout(function(){ btn.textContent='採用'; },1200);
       });
@@ -585,7 +596,7 @@
     if(intlAuto){
       var ficpTbl = fx==='W'?T.fedexW:T.fedexE;
       var ficpB = b('FICP','',ficpTbl,5000,fFx,false,fxAdds);
-      if(!ficpB.na){ setIntl(ficpB.total); }
+      if(!ficpB.na){ window.__intlBd={name:'FedEx FICP '+(fx==='W'?'西部':'東部/CA'),total:ficpB.total,bd:ficpB.bd}; setIntl(ficpB.total); }
     }
     save();
   }
